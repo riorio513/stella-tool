@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配信サポートツール　stella</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg-color: #2c2c2c;
+            --border-color: #444444;
+            --text-color: #e0e0e0;
+            --text-muted-color: #a0a0a0;
+            --accent-color: #14b8a6; /* Teal */
+            --accent-hover-color: #0d9488;
+            --danger-color: #f43f5e;
+            --danger-hover-color: #e11d48;
+            --sidebar-bg-color: #212121;
+        }
+
+        html.light {
+            --bg-color: #f3f4f6;
+            --card-bg-color: #ffffff;
+            --border-color: #d1d5db;
+            --text-color: #1f2937;
+            --text-muted-color: #6b7280;
+            --sidebar-bg-color: #ffffff;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn-accent:hover {
+            background-color: var(--accent-hover-color);
+        }
+        .btn-accent:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-danger:hover {
+            background-color: var(--danger-hover-color);
+        }
+        
+        .input-field, .textarea-field, .select-field {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        .input-field:focus, .textarea-field:focus, .select-field:focus {
+            outline: 2px solid var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* スクロールバーのスタイル */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted-color); }
+        
+        .tab-button.active {
+            border-bottom-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        
+        .nav-link {
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .nav-link.active {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .roulette-canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            padding-top: 100%;
+        }
+        #rouletteCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .roulette-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent-color);
+        }
+        
+        .gacha-capsule { animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-5deg); }
+            75% { transform: translateX(5px) rotate(5deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        #dice-display svg {
+            width: 100px;
+            height: 100px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+        #dice-display .dice-svg-shape {
+            stroke: var(--accent-color);
+            stroke-width: 8;
+            fill: var(--card-bg-color);
+        }
+        #dice-display .dice-svg-text {
+            fill: var(--text-color);
+            font-size: 40px;
+            font-weight: bold;
+            font-family: 'Inter', sans-serif;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        
+        .timer-display {
+            font-family: 'Inter', monospace;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <nav class="w-60 bg-sidebar-bg-color flex flex-col border-r border-border-color shadow-lg">
+        <div class="p-4 border-b border-border-color">
+            <h1 class="text-xl font-bold text-center tracking-widest">
+                <i class="fas fa-star mr-2 text-teal-400"></i>stella
+            </h1>
+        </div>
+        <div class="flex-grow p-2 space-y-2">
+            <a href="#" class="nav-link active flex items-center p-2 rounded-md" data-panel="panel-kokoro-log">
+                <i class="fas fa-users fa-fw mr-3"></i><span>視聴者メモ</span>
+            </a>
+            <a href="#" class="nav-link flex items-center p-2 rounded-md" data-panel="panel-kikaku-engine">
+                <i class="fas fa-dice fa-fw mr-3"></i><span>企画エンジン</span>
+            </a>
+            <a href="#" class="nav-link flex items-center p-2 rounded-md" data-panel="panel-workflow">
+                <i class="fas fa-tasks fa-fw mr-3"></i><span>ワークフロー支援</span>
+            </a>
+             <a href="#" class="nav-link flex items-center p-2 rounded-md" data-panel="panel-resources">
+                <i class="fas fa-link fa-fw mr-3"></i><span>リソースハブ</span>
+            </a>
+            <a href="#" class="nav-link flex items-center p-2 rounded-md" data-panel="panel-dashboard">
+                <i class="fas fa-cogs fa-fw mr-3"></i><span>ダッシュボード</span>
+            </a>
+        </div>
+        <div class="p-2 border-t border-border-color">
+            <!-- Footer content if any -->
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <!-- Kokoro Log Panel -->
+        <div id="panel-kokoro-log" class="main-panel p-6">
+             <div class="card p-4 rounded-lg flex-grow flex flex-col h-[calc(100vh-3rem)]">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold"><i class="fas fa-users mr-2 text-teal-400"></i>視聴者メモ</h2>
+                    <button id="add-listener-btn" class="btn-accent px-3 py-1 rounded-md text-sm font-semibold"><i class="fas fa-plus mr-1"></i>新規追加</button>
+                </div>
+                <div class="relative mb-4">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="search-listener" placeholder="リスナーを検索..." class="input-field w-full pl-10 pr-4 py-2 rounded-md">
+                </div>
+                <div class="text-xs text-text-muted-color mb-4 p-3 bg-black bg-opacity-20 rounded-md border-l-4 border-teal-500">
+                    <p>リスナーの名前や会話の内容、タグなどを記録する場所です。「新規追加」ボタンからメモを作成し、配信中の大切な情報を忘れないように管理しましょう。<br>
+                        <strong class="text-amber-400"><i class="fas fa-exclamation-triangle mr-1"></i>このツールはデータをブラウザ内に一時的に保存します。万が一に備え、配信終了後は各メモのエクスポート機能の利用を推奨します。</strong>
+                    </p>
+                </div>
+                <div id="listener-list" class="overflow-y-auto flex-grow pr-2">
+                    <!-- Listener cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Kikaku Engine Panel -->
+        <div id="panel-kikaku-engine" class="main-panel hidden p-6">
+            <div class="card p-4 rounded-lg">
+                <h2 class="text-xl font-bold mb-4"><i class="fas fa-dice mr-2 text-teal-400"></i>企画エンジン</h2>
+                <div class="border-b border-gray-700">
+                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                        <button class="tab-button active py-2 px-1 border-b-2 font-medium text-sm border-transparent" data-tab="roulette"><i class="fas fa-bullseye mr-1"></i>ルーレット</button>
+                        <button class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent" data-tab="gacha"><i class="fas fa-gift mr-1"></i>トークガチャ</button>
+                        <button class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent" data-tab="original-gacha"><i class="fas fa-star mr-1"></i>オリジナルガチャ</button>
+                        <button class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent" data-tab="dice"><i class="fas fa-dice-d6 mr-1"></i>ダイス</button>
+                    </nav>
+                </div>
+                
+                <div id="roulette" class="tab-content mt-4"></div>
+                <div id="gacha" class="tab-content hidden mt-4"></div>
+                <div id="original-gacha" class="tab-content hidden mt-4"></div>
+                <div id="dice" class="tab-content hidden mt-4"></div>
+            </div>
+        </div>
+        
+        <!-- Workflow Support Panel -->
+        <div id="panel-workflow" class="main-panel hidden p-6">
+            <div class="card p-4 rounded-lg">
+                <h2 class="text-xl font-bold mb-4"><i class="fas fa-tasks mr-2 text-teal-400"></i>ワークフロー支援</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-6">
+                        <div class="card p-4 rounded-lg"></div>
+                        <div class="card p-4 rounded-lg"></div>
+                    </div>
+                    <div class="card p-4 rounded-lg">
+                        <div id="post-generator">
+                            <h3 class="font-bold mb-2">投稿ジェネレーター</h3>
+                            <select id="post-template-select" class="select-field w-full text-sm rounded-md mb-2">
+                                <option value="announcement">配信告知</option>
+                                <option value="greeting">おはV / おやV</option>
+                                <option value="thanks">配信後お礼</option>
+                            </select>
+                            <div id="post-template-fields"></div>
+                            <textarea id="generated-post" rows="5" class="textarea-field w-full text-sm rounded-md mt-2" placeholder="ここに投稿文が生成されます..."></textarea>
+                            <button id="copy-post-button" class="btn-accent w-full mt-2 text-sm py-1 rounded-md"><i class="fas fa-copy mr-1"></i>生成してコピー</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources Panel -->
+        <div id="panel-resources" class="main-panel hidden p-6">
+            <div class="card p-4 rounded-lg">
+                 <h2 class="text-xl font-bold mb-4"><i class="fas fa-link mr-2 text-teal-400"></i>リソースハブ</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card p-4 rounded-lg">
+                        <h3 class="font-bold mb-2">便利なURL集</h3>
+                        <div id="urls-container" class="space-y-2 max-h-80 overflow-y-auto pr-2"></div>
+                        <button id="add-url-button" class="btn-accent w-full mt-2 text-sm py-1 rounded-md"><i class="fas fa-plus mr-1"></i>新規URLを追加</button>
+                    </div>
+                    <div class="card p-4 rounded-lg">
+                        <h3 class="font-bold mb-2">規約・ガイドライン</h3>
+                        <a href="https://iriam.com/policies/terms/" target="_blank" class="block p-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-book mr-2"></i>IRIAM 利用規約
+                        </a>
+                         <a href="https://iriam.com/policies/guidelines/community" target="_blank" class="block p-3 bg-gray-800 rounded-md hover:bg-gray-700 transition-colors mt-2">
+                            <i class="fas fa-users mr-2"></i>IRIAM コミュニティガイドライン
+                        </a>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Panel -->
+        <div id="panel-dashboard" class="main-panel hidden p-6">
+            <div class="card p-4 rounded-lg"></div>
+        </div>
+    </main>
+    
+    <!-- Modal for Listener Details -->
+    <div id="listener-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="card rounded-lg w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-bold">リスナー情報の編集</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto"></div>
+            <div class="p-4 border-t border-gray-700 flex justify-between">
+                <div>
+                    <button id="export-listener-data" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-md text-sm">エクスポート</button>
+                    <button id="copy-listener-data" class="bg-gray-600 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-md text-sm">全文コピー</button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="delete-listener" class="btn-danger font-semibold py-2 px-4 rounded-md">削除</button>
+                    <button id="save-listener" class="btn-accent font-semibold py-2 px-4 rounded-md">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const App = {
+            state: {
+                listeners: [],
+                roulettePresets: {},
+                gachaDecks: {},
+                originalGachas: {},
+                workflow: {},
+                resources: {},
+                theme: 'dark'
+            },
+
+            init() {
+                this.loadState();
+                this.fillContent(); 
+                this.renderAll();
+                this.attachEventListeners();
+                this.workflow.init();
+            },
+
+            loadState() {
+                const savedState = localStorage.getItem('liverCopilotState');
+                if (savedState) {
+                    this.state = JSON.parse(savedState);
+                    // Migration from old data structure
+                    this.state.listeners.forEach(listener => {
+                        if (listener.notes || listener.interactions) {
+                            if (!listener.infoMemos) listener.infoMemos = [];
+                            if (listener.notes) {
+                                listener.infoMemos.push({ id: this.generateId(), tag: 'その他', text: listener.notes, date: new Date().toISOString() });
+                            }
+                            if (listener.interactions) {
+                                listener.interactions.forEach(interaction => {
+                                    listener.infoMemos.push({ id: this.generateId(), tag: '交流', text: interaction.text, date: interaction.date });
+                                });
+                            }
+                            delete listener.notes;
+                            delete listener.interactions;
+                        }
+                    });
+
+                    delete this.state.pondashiPanels;
+                    delete this.state.streamHelper;
+                    if(this.state.workflow) {
+                        delete this.state.workflow.snippets;
+                        delete this.state.workflow.checklist;
+                    }
+                    if (!this.state.originalGachas) this.state.originalGachas = {}; 
+                    if (!this.state.workflow) this.state.workflow = { duration: { started: null, elapsed: 0, intervalId: null }, countdown: { endTime: null, intervalId: null }, counters: {} };
+                    if (!this.state.resources) this.state.resources = { urls: [] };
+                } else {
+                    this.state = {
+                        listeners: [ { id: this.generateId(), name: 'せんまいさん', nickname: 'せんちゃん', tags: ['常連', 'ハムスター好き'], infoMemos: [{id: this.generateId(), tag: '趣味', text: 'ゴルハムを飼っている。最近ひまわりの種をあげすぎたらしい。', date: new Date().toISOString()}], interactions: [{date: new Date().toISOString(), text: '初回来訪！'}] } ],
+                        roulettePresets: { '今日の話題': ['最近ハマってること', '好きな食べ物', '週末の予定', '子供の頃の夢'], '罰ゲーム': ['モノマネする', '早口言葉', '一発ギャグ'] },
+                        gachaDecks: { 'アイスブレイク': ['好きな季節は？', 'インドア派？アウトドア派？'], 'もしもシリーズ': ['もしも魔法が使えたら？', 'もしも透明人間になったら？'], 'カスタムデッキ': [] },
+                        originalGachas: { 'サンプルガチャ': [ { item: 'SSR レアアイテム', weight: 1 }, { item: 'SR アイテム', weight: 5 }, { item: 'R コモンアイテム', weight: 20 }, { item: 'N ノーマルアイテム', weight: 74 } ] },
+                        workflow: { duration: { started: null, elapsed: 0, intervalId: null }, countdown: { endTime: null, intervalId: null }, counters: { '今日のギフト': 0, '歌った曲': 0 } },
+                        resources: {
+                            urls: [
+                                { id: this.generateId(), name: 'IRIAM公式', url: 'https://www.iriam.com/' },
+                                { id: this.generateId(), name: 'IRIAM公式 X', url: 'https://twitter.com/iriam_official' },
+                                { id: this.generateId(), name: 'ギガファイル便', url: 'https://gigafile.nu/' }
+                            ]
+                        },
+                        theme: 'dark'
+                    };
+                }
+                document.documentElement.className = this.state.theme;
+            },
+
+            saveState() {
+                const stateToSave = JSON.parse(JSON.stringify(this.state));
+                if(stateToSave.workflow.duration) delete stateToSave.workflow.duration.intervalId;
+                if(stateToSave.workflow.countdown) delete stateToSave.workflow.countdown.intervalId;
+                localStorage.setItem('liverCopilotState', JSON.stringify(stateToSave));
+            },
+
+            generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); },
+
+            attachEventListeners() {
+                document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); this.navigate(e.currentTarget.dataset.panel); }));
+                document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+                document.getElementById('export-data').addEventListener('click', () => this.exportData());
+                document.getElementById('import-data').addEventListener('change', (e) => this.importData(e));
+                document.getElementById('add-listener-btn').addEventListener('click', () => this.showListenerModal());
+                document.getElementById('search-listener').addEventListener('input', (e) => this.renderListenerList(e.target.value));
+                
+                document.getElementById('listener-list').addEventListener('click', (e) => {
+                    const exportBtn = e.target.closest('.export-listener-card-btn');
+                    if (exportBtn) {
+                        e.stopPropagation(); // Prevent modal from opening
+                        this.exportSingleListenerData(exportBtn.dataset.id);
+                        return;
+                    }
+                    const card = e.target.closest('.card[data-id]');
+                    if (card) {
+                        this.showListenerModal(card.dataset.id);
+                    }
+                });
+
+                // Modal
+                document.getElementById('close-modal').addEventListener('click', () => this.hideListenerModal());
+                document.getElementById('save-listener').addEventListener('click', () => this.saveListener());
+                document.getElementById('delete-listener').addEventListener('click', () => this.deleteListener());
+                document.getElementById('add-info-memo-btn').addEventListener('click', () => this.addInfoMemo());
+                document.getElementById('copy-listener-data').addEventListener('click', () => this.copyListenerData());
+                document.getElementById('export-listener-data').addEventListener('click', () => this.exportSingleListenerData(document.getElementById('listener-id').value));
+                document.querySelectorAll('#panel-kikaku-engine .tab-button').forEach(button => button.addEventListener('click', (e) => this.switchTab(e.currentTarget, '#panel-kikaku-engine')));
+                document.getElementById('spin-roulette').addEventListener('click', () => this.roulette.spin());
+                document.getElementById('save-roulette-preset').addEventListener('click', () => this.saveRoulettePreset());
+                document.getElementById('delete-roulette-preset').addEventListener('click', () => this.deleteRoulettePreset());
+                document.getElementById('roulette-presets').addEventListener('change', (e) => this.loadRoulettePreset(e.target.value));
+                document.getElementById('roulette-items').addEventListener('input', () => this.roulette.drawWheel());
+                document.getElementById('draw-gacha').addEventListener('click', () => this.drawGacha());
+                document.getElementById('gacha-decks').addEventListener('change', (e) => this.loadGachaDeck(e.target.value));
+                document.getElementById('save-gacha-deck').addEventListener('click', () => this.saveGachaDeck());
+                document.getElementById('draw-og-1').addEventListener('click', () => this.originalGacha.draw(1));
+                document.getElementById('draw-og-10').addEventListener('click', () => this.originalGacha.draw(10));
+                document.getElementById('save-og-preset').addEventListener('click', () => this.originalGacha.savePreset());
+                document.getElementById('delete-og-preset').addEventListener('click', () => this.originalGacha.deletePreset());
+                document.getElementById('og-presets').addEventListener('change', (e) => this.originalGacha.loadPreset(e.target.value));
+                document.getElementById('add-og-item').addEventListener('click', () => this.originalGacha.addEditorRow());
+                document.querySelectorAll('.dice-roll').forEach(button => button.addEventListener('click', (e) => this.dice.roll(e.currentTarget.dataset.sides)));
+                document.getElementById('start-stream-timer').addEventListener('click', () => this.workflow.startDuration());
+                document.getElementById('pause-stream-timer').addEventListener('click', () => this.workflow.pauseDuration());
+                document.getElementById('reset-stream-timer').addEventListener('click', () => this.workflow.resetDuration());
+                document.getElementById('start-countdown').addEventListener('click', () => this.workflow.startCountdown());
+                document.getElementById('reset-countdown').addEventListener('click', () => this.workflow.resetCountdown());
+                document.getElementById('add-counter').addEventListener('click', () => this.workflow.addCounter());
+                document.getElementById('post-template-select').addEventListener('change', () => this.workflow.renderPostGenerator());
+                document.getElementById('copy-post-button').addEventListener('click', () => this.workflow.generateAndCopyPost());
+                document.getElementById('add-url-button').addEventListener('click', () => this.resources.addUrl());
+            },
+
+            renderAll() {
+                this.renderListenerList();
+                this.renderRoulettePresets();
+                this.loadRoulettePreset(Object.keys(this.state.roulettePresets)[0] || '');
+                this.renderGachaDecks();
+                this.loadGachaDeck(Object.keys(this.state.gachaDecks)[0] || '');
+                this.originalGacha.renderPresets();
+                this.originalGacha.loadPreset(Object.keys(this.state.originalGachas)[0] || '');
+                this.roulette.drawWheel();
+                this.workflow.renderAll();
+                this.resources.renderUrls();
+            },
+
+            navigate(panelId) {
+                document.querySelectorAll('.main-panel').forEach(p => p.classList.add('hidden'));
+                document.getElementById(panelId).classList.remove('hidden');
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelector(`.nav-link[data-panel="${panelId}"]`).classList.add('active');
+            },
+
+            toggleTheme() {
+                this.state.theme = this.state.theme === 'dark' ? 'light' : 'dark';
+                document.documentElement.className = this.state.theme;
+                this.saveState();
+                this.roulette.drawWheel();
+            },
+
+            exportData() {
+                const dataStr = JSON.stringify(this.state, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', 'liver_copilot_backup.json');
+                linkElement.click();
+            },
+
+            importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedState = JSON.parse(e.target.result);
+                        if (importedState.listeners && importedState.roulettePresets) {
+                            this.state = importedState;
+                            this.saveState();
+                            this.renderAll();
+                            this.workflow.init(); 
+                            this.navigate('panel-kokoro-log');
+                            alert('データのインポートに成功しました！');
+                        } else { alert('無効なファイル形式です。'); }
+                    } catch (error) { alert('ファイルの読み込みに失敗しました。'); console.error("Import error:", error); }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            },
+            
+            renderListenerList(filter = '') {
+                const listEl = document.getElementById('listener-list');
+                listEl.innerHTML = '';
+                const lowerCaseFilter = filter.toLowerCase();
+                const filteredListeners = this.state.listeners.filter(l => 
+                    l.name.toLowerCase().includes(lowerCaseFilter) || 
+                    (l.nickname && l.nickname.toLowerCase().includes(lowerCaseFilter)) || 
+                    ((l.infoMemos || []).some(memo => memo.text.toLowerCase().includes(lowerCaseFilter) || memo.tag.toLowerCase().includes(lowerCaseFilter))) || 
+                    (l.tags && l.tags.join(' ').toLowerCase().includes(lowerCaseFilter))
+                );
+                if (filteredListeners.length === 0) { listEl.innerHTML = `<p class="text-center text-gray-500 mt-4">リスナーが見つかりません。</p>`; return; }
+
+                filteredListeners.forEach(listener => {
+                    const card = document.createElement('div');
+                    card.className = 'card p-3 rounded-md mb-2 cursor-pointer hover:bg-gray-700 transition-colors';
+                    card.dataset.id = listener.id;
+                    const latestMemo = (listener.infoMemos && listener.infoMemos.length > 0) ? [...listener.infoMemos].sort((a,b) => new Date(b.date) - new Date(a.date))[0].text : 'メモがありません';
+                    
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold">${listener.name} <span class="text-sm text-gray-400 font-normal">${listener.nickname ? `(${listener.nickname})` : ''}</span></p>
+                                <p class="text-xs text-gray-400 mt-1">${latestMemo.substring(0, 50)}${latestMemo.length > 50 ? '...' : ''}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0 ml-2 flex items-center gap-3">
+                                <button class="export-listener-card-btn text-gray-500 hover:text-accent-color text-sm" data-id="${listener.id}" title="このメモをエクスポート">
+                                    <i class="fas fa-file-export"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    listEl.appendChild(card);
+                });
+            },
+
+            showListenerModal(id = null) {
+                const modal = document.getElementById('listener-modal');
+                const title = document.getElementById('modal-title');
+                const deleteBtn = document.getElementById('delete-listener');
+                const form = document.querySelector('#listener-modal form');
+                document.getElementById('listener-id').value = id || '';
+                if (id) {
+                    const listener = this.state.listeners.find(l => l.id === id);
+                    title.textContent = 'リスナー情報の編集';
+                    document.getElementById('listener-name').value = listener.name;
+                    document.getElementById('listener-nickname').value = listener.nickname;
+                    this.renderInfoMemos(listener.infoMemos);
+                    deleteBtn.classList.remove('hidden');
+                } else {
+                    title.textContent = '新規リスナー追加';
+                    if(form) form.reset();
+                    this.renderInfoMemos([]);
+                    deleteBtn.classList.add('hidden');
+                }
+                modal.classList.remove('hidden');
+            },
+
+            hideListenerModal() { document.getElementById('listener-modal').classList.add('hidden'); },
+
+            saveListener() {
+                const id = document.getElementById('listener-id').value;
+                const listenerData = { 
+                    name: document.getElementById('listener-name').value, 
+                    nickname: document.getElementById('listener-nickname').value,
+                };
+                if (!listenerData.name) { alert('名前は必須です。'); return; }
+                if (id) {
+                    const index = this.state.listeners.findIndex(l => l.id === id);
+                    this.state.listeners[index] = { ...this.state.listeners[index], ...listenerData };
+                } else {
+                    listenerData.id = this.generateId();
+                    listenerData.infoMemos = [{ id: this.generateId(), tag: '交流', text: '初回来訪！', date: new Date().toISOString() }];
+                    this.state.listeners.push(listenerData);
+                }
+                this.saveState(); this.renderListenerList(); this.hideListenerModal();
+            },
+            
+            deleteListener() {
+                const id = document.getElementById('listener-id').value;
+                if (id && confirm('このリスナーを本当に削除しますか？')) {
+                    this.state.listeners = this.state.listeners.filter(l => l.id !== id);
+                    this.saveState(); this.renderListenerList(); this.hideListenerModal();
+                }
+            },
+            
+            renderInfoMemos(memos = []) {
+                const container = document.getElementById('info-memos-container');
+                container.innerHTML = '';
+                (memos || []).slice().sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(memo => {
+                    const item = document.createElement('div');
+                    item.className = 'text-sm bg-black bg-opacity-20 p-2 rounded-md flex justify-between items-start gap-2';
+                    item.innerHTML = `
+                        <div>
+                            <p class="text-gray-300"><span class="text-xs font-semibold px-2 py-0.5 bg-teal-500/20 text-teal-300 rounded-full mr-2">${memo.tag}</span>${memo.text}</p>
+                            <p class="text-xs text-gray-500 text-left mt-1">${new Date(memo.date).toLocaleString('ja-JP')}</p>
+                        </div>
+                        <button class="delete-memo-btn text-gray-500 hover:text-red-400 flex-shrink-0" data-memo-id="${memo.id}">&times;</button>
+                    `;
+                    container.appendChild(item);
+                });
+                container.querySelectorAll('.delete-memo-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const listenerId = document.getElementById('listener-id').value;
+                        const memoId = e.currentTarget.dataset.memoId;
+                        this.deleteInfoMemo(listenerId, memoId);
+                    });
+                });
+            },
+
+            addInfoMemo() {
+                const listenerId = document.getElementById('listener-id').value;
+                const tag = document.getElementById('new-info-memo-tag').value;
+                const textInput = document.getElementById('new-info-memo-text');
+                const text = textInput.value.trim();
+
+                if (!listenerId || !text) return;
+
+                const listener = this.state.listeners.find(l => l.id === listenerId);
+                if (!listener.infoMemos) listener.infoMemos = [];
+                listener.infoMemos.push({ id: this.generateId(), tag, text, date: new Date().toISOString() });
+                
+                textInput.value = '';
+                this.renderInfoMemos(listener.infoMemos);
+                this.saveState();
+            },
+
+            deleteInfoMemo(listenerId, memoId) {
+                if (!listenerId || !memoId) return;
+                const listener = this.state.listeners.find(l => l.id === listenerId);
+                if (listener && listener.infoMemos) {
+                    listener.infoMemos = listener.infoMemos.filter(memo => memo.id !== memoId);
+                    this.renderInfoMemos(listener.infoMemos);
+                    this.saveState();
+                }
+            },
+            
+            copyListenerData() {
+                const id = document.getElementById('listener-id').value;
+                if (!id) return;
+                const listener = this.state.listeners.find(l => l.id === id);
+                let text = `名前: ${listener.name}\n`;
+                if(listener.nickname) text += `ニックネーム: ${listener.nickname}\n`;
+                if(listener.tags && listener.tags.length > 0) text += `タグ: ${listener.tags.join(', ')}\n`;
+                
+                if(listener.infoMemos && listener.infoMemos.length > 0) {
+                    text += `\n--- 情報メモ ---\n`;
+                    [...listener.infoMemos].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(memo => {
+                        text += `[${new Date(memo.date).toLocaleDateString('ja-JP')} / ${memo.tag}] ${memo.text}\n`;
+                    });
+                }
+                navigator.clipboard.writeText(text);
+                alert('リスナー情報をクリップボードにコピーしました。');
+            },
+
+            exportSingleListenerData(id) {
+                if (!id) return;
+                const listener = this.state.listeners.find(l => l.id === id);
+                if (!listener) return;
+                
+                let text = `名前: ${listener.name}\n`;
+                if(listener.nickname) text += `ニックネーム: ${listener.nickname}\n`;
+                
+                if(listener.infoMemos && listener.infoMemos.length > 0) {
+                    text += `\n--- 情報メモ ---\n`;
+                    [...listener.infoMemos].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(memo => {
+                        text += `[${new Date(memo.date).toLocaleDateString('ja-JP')} / ${memo.tag}] ${memo.text}\n`;
+                    });
+                }
+
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${listener.name}_log.txt`;
+                link.click();
+                URL.revokeObjectURL(url);
+            },
+            
+            addQuickTag(tag) {
+                const tagsInput = document.getElementById('listener-tags');
+                const currentTags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+                if (!currentTags.includes(tag)) { currentTags.push(tag); tagsInput.value = currentTags.join(', '); }
+            },
+
+            switchTab(button, panelSelector) {
+                const tabId = button.dataset.tab;
+                document.querySelectorAll(`${panelSelector} .tab-button`).forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                document.querySelectorAll(`${panelSelector} .tab-content`).forEach(content => content.classList.toggle('hidden', content.id !== tabId));
+            },
+            
+            // --- Kikaku Engine Logic continues... ---
+            // The logic for roulette, gacha, dice, etc. is complex and has been implemented as per previous versions.
+            // Full implementation is included in the runnable code but omitted here for brevity.
+            sound: { /* ... */ }, roulette: { /* ... */ }, originalGacha: { /* ... */ }, dice: { /* ... */ },
+            renderRoulettePresets(){}, loadRoulettePreset(){}, saveRoulettePreset(){}, deleteRoulettePreset(){},
+            renderGachaDecks(){}, loadGachaDeck(){}, saveGachaDeck(){}, drawGacha(){},
+            
+            workflow: { /* ... */ },
+            resources: { /* ... */ },
+            
+            fillContent() {
+                document.getElementById('roulette').innerHTML = `...`;
+                document.getElementById('gacha').innerHTML = `...`;
+                document.getElementById('original-gacha').innerHTML = `...`;
+                document.getElementById('dice').innerHTML = `...`;
+                document.querySelector('#panel-workflow .card .card:nth-child(1)').innerHTML = `...`;
+                document.querySelector('#panel-workflow .card .card:nth-child(2)').innerHTML = `...`;
+                document.getElementById('panel-dashboard').querySelector('.card').innerHTML = `...`;
+                document.querySelector('#listener-modal .p-4.overflow-y-auto').innerHTML = `...`;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // This self-executing function replaces the stubs with full implementations
+            (function(App){
+                // Fill Content
+                App.fillContent = function() {
+                    document.getElementById('roulette').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><div class="mb-2"><label class="text-sm font-semibold">プリセット:</label><div class="flex gap-2"><select id="roulette-presets" class="select-field flex-grow rounded-md text-sm"></select><button id="save-roulette-preset" class="btn-accent p-2 rounded-md" title="プリセットを保存"><i class="fas fa-save"></i></button><button id="delete-roulette-preset" class="btn-danger p-2 rounded-md" title="プリセットを削除"><i class="fas fa-trash"></i></button></div></div><label for="roulette-items" class="text-sm font-semibold">項目 (1行に1つ):</label><textarea id="roulette-items" rows="8" class="textarea-field w-full p-2 rounded-md text-sm"></textarea><div class="flex items-center mt-2"><input type="checkbox" id="remove-after-spin" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"><label for="remove-after-spin" class="ml-2 block text-sm text-gray-400">選択後、項目を削除する</label></div></div><div class="flex flex-col items-center justify-center"><div class="roulette-canvas-container"><canvas id="rouletteCanvas" width="500" height="500"></canvas><div class="roulette-pointer"></div></div><button id="spin-roulette" class="btn-accent mt-4 w-full py-2 rounded-md font-bold">SPIN!</button><div class="mt-4 text-center h-10"><p id="roulette-result" class="text-xl font-bold"></p></div></div></div>`;
+                    document.getElementById('gacha').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><div class="mb-2"><label for="gacha-decks" class="text-sm font-semibold">デッキ:</label><select id="gacha-decks" class="select-field w-full rounded-md text-sm"></select></div><div id="custom-deck-editor" class="hidden"><label for="gacha-items" class="text-sm font-semibold">話題 (1行に1つ):</label><textarea id="gacha-items" rows="8" class="textarea-field w-full p-2 rounded-md text-sm"></textarea><div class="flex gap-2 mt-2"><button id="save-gacha-deck" class="btn-accent p-2 rounded-md text-sm w-full">デッキを保存</button></div></div></div><div class="flex flex-col items-center justify-center card p-4 border-dashed border-2 border-gray-600 rounded-lg min-h-[250px]"><p id="gacha-result" class="text-lg text-center font-semibold text-gray-400">下のボタンでガチャを引いてね！</p><div id="gacha-animation" class="hidden text-6xl my-4"><i class="fas fa-gift gacha-capsule text-yellow-400"></i></div><button id="draw-gacha" class="btn-accent mt-4 w-full py-2 rounded-md font-bold">ガチャを引く！</button></div></div>`;
+                    document.getElementById('original-gacha').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><div class="mb-2"><label class="text-sm font-semibold">プリセット:</label><div class="flex gap-2"><select id="og-presets" class="select-field flex-grow rounded-md text-sm"></select><button id="save-og-preset" class="btn-accent p-2 rounded-md" title="プリセットを保存"><i class="fas fa-save"></i></button><button id="delete-og-preset" class="btn-danger p-2 rounded-md" title="プリセットを削除"><i class="fas fa-trash"></i></button></div></div><label class="text-sm font-semibold">項目と排出確率 (例: SSRキャラ, 1):</label><div id="og-items-editor" class="mt-2 space-y-2 max-h-60 overflow-y-auto pr-2"></div><button id="add-og-item" class="btn-accent mt-2 w-full text-sm py-1 rounded-md"><i class="fas fa-plus mr-1"></i>項目を追加</button></div><div class="flex flex-col"><div class="flex-grow card p-4 border-dashed border-2 border-gray-600 rounded-lg"><h3 class="font-semibold text-center mb-2">ガチャ結果</h3><div id="og-results" class="text-center text-gray-400">ガチャを引いてください</div></div><div class="flex gap-2 mt-4"><button id="draw-og-1" class="btn-accent w-full py-2 rounded-md font-bold">1回引く</button><button id="draw-og-10" class="btn-accent w-full py-2 rounded-md font-bold">10回引く</button></div></div></div>`;
+                    document.getElementById('dice').innerHTML = `<div class="flex flex-col items-center justify-center min-h-[250px]"><div id="dice-display" class="w-32 h-32 mb-4 flex items-center justify-center"><svg viewBox="0 0 100 100"><rect class="dice-svg-shape" x="10" y="10" width="80" height="80" rx="10"></rect><text x="50" y="50" class="dice-svg-text">?</text></svg></div><div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-md"><button class="dice-roll btn-accent p-3 rounded-lg" data-sides="4">d4</button><button class="dice-roll btn-accent p-3 rounded-lg" data-sides="6">d6</button><button class="dice-roll btn-accent p-3 rounded-lg" data-sides="10">d10</button><button class="dice-roll btn-accent p-3 rounded-lg" data-sides="20">d20</button></div><p id="dice-result-text" class="mt-4 text-xl font-bold h-6"></p></div>`;
+                    document.querySelector('#panel-workflow .card .card:nth-child(1)').innerHTML = `<h3 class="font-bold mb-4 text-center">タイマー</h3><div class="text-center mb-4"><p class="text-sm text-gray-400">配信経過時間</p><p id="stream-duration" class="text-3xl font-bold timer-display">00:00:00</p><div class="flex gap-2 justify-center mt-2"><button id="start-stream-timer" class="btn-accent px-3 py-1 text-sm rounded-md">開始</button><button id="pause-stream-timer" class="btn-accent px-3 py-1 text-sm rounded-md bg-amber-600 hover:bg-amber-700">一時停止</button><button id="reset-stream-timer" class="btn-danger px-3 py-1 text-sm rounded-md">リセット</button></div></div><hr class="border-gray-700 my-4"><div class="text-center"><p class="text-sm text-gray-400">カウントダウン</p><p id="countdown-display" class="text-3xl font-bold timer-display">00:00</p><div class="flex gap-2 items-center justify-center mt-2"><input type="number" id="countdown-minutes" class="input-field w-20 text-center rounded-md" placeholder="分" value="10"><button id="start-countdown" class="btn-accent px-3 py-1 text-sm rounded-md">開始</button><button id="reset-countdown" class="btn-danger px-3 py-1 text-sm rounded-md">リセット</button></div></div>`;
+                    document.querySelector('#panel-workflow .card .card:nth-child(2)').innerHTML = `<h3 class="font-bold mb-4 text-center">カウンター</h3><div id="counters-container" class="space-y-3 max-h-48 overflow-y-auto pr-2"></div><div class="flex gap-2 mt-4"><input type="text" id="new-counter-name" class="input-field flex-grow rounded-md text-sm" placeholder="カウンター名..."><button id="add-counter" class="btn-accent px-3 py-1 text-sm rounded-md">追加</button></div>`;
+                    document.getElementById('panel-dashboard').querySelector('.card').innerHTML = `<h2 class="text-xl font-bold"><i class="fas fa-cogs mr-2 text-teal-400"></i>ダッシュボード</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"><div><h3 class="font-semibold mb-2">テーマ設定</h3><div class="flex gap-2"><button id="theme-toggle" class="p-2 rounded-md bg-gray-700 text-white dark:bg-gray-200 dark:text-black"><i class="fas fa-sun"></i> / <i class="fas fa-moon"></i></button></div></div><div><h3 class="font-semibold mb-2">データ管理</h3><p class="text-xs text-gray-400 mb-2">データはブラウザ内に保存されます。定期的にエクスポートしてバックアップしてください。</p><div class="flex gap-2"><button id="export-data" class="btn-accent p-2 rounded-md text-sm"><i class="fas fa-file-export mr-1"></i>エクスポート</button><label class="btn-accent p-2 rounded-md text-sm cursor-pointer"><i class="fas fa-file-import mr-1"></i>インポート<input type="file" id="import-data" class="hidden" accept=".json"></label></div></div></div>`;
+                    document.querySelector('#listener-modal .p-4.overflow-y-auto').innerHTML = `<form id="listener-form"><input type="hidden" id="listener-id"><div class="mb-4"><label for="listener-name" class="block text-sm font-medium text-gray-300">名前</label><input type="text" id="listener-name" class="input-field mt-1 block w-full rounded-md shadow-sm"></div><div class="mb-4"><label for="listener-nickname" class="block text-sm font-medium text-gray-300">読み方 / ニックネーム</label><input type="text" id="listener-nickname" class="input-field mt-1 block w-full rounded-md shadow-sm"></div><div class="mb-4"><h4 class="text-sm font-medium text-gray-300 mb-2">情報メモ</h4><div id="info-memos-container" class="space-y-2 max-h-48 overflow-y-auto pr-2 mb-2 bg-black bg-opacity-20 p-2 rounded-md"></div><div class="p-3 bg-black bg-opacity-20 rounded-md"><div class="grid grid-cols-1 sm:grid-cols-3 gap-2"><select id="new-info-memo-tag" class="select-field col-span-1 sm:col-span-1 text-sm"><option>好物</option><option>苦手</option><option>悩み</option><option>趣味</option><option>夢</option><option>交流</option><option>その他</option></select><input type="text" id="new-info-memo-text" placeholder="新しい情報を入力..." class="input-field col-span-2 sm:col-span-2 text-sm"></div><button type="button" id="add-info-memo-btn" class="btn-accent w-full mt-2 text-sm py-1">メモを追加</button></div></div></form>`;
+                };
+                // Full Methods
+                Object.assign(App.sound, { audioCtx: null, drumrollNode: null, init() { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }, playDrumroll(duration) { if (!this.audioCtx) this.init(); if (this.drumrollNode) this.stopDrumroll(); const oscillator = this.audioCtx.createOscillator(); const gainNode = this.audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(this.audioCtx.destination); oscillator.type = 'square'; gainNode.gain.setValueAtTime(0.2, this.audioCtx.currentTime); const now = this.audioCtx.currentTime; for (let i = 0; i < duration * 10; i++) { const time = now + (i / 10) * (i / (duration*10)); gainNode.gain.setValueAtTime(0.2, time); gainNode.gain.setValueAtTime(0, time + 0.05); } oscillator.start(now); this.drumrollNode = oscillator; setTimeout(() => this.stopDrumroll(), duration * 1000); }, stopDrumroll() { if (this.drumrollNode) { this.drumrollNode.stop(); this.drumrollNode.disconnect(); this.drumrollNode = null; } } });
+                Object.assign(App, { renderRoulettePresets() { const select = document.getElementById('roulette-presets'); select.innerHTML = ''; for (const name in this.state.roulettePresets) { const option = document.createElement('option'); option.value = name; option.textContent = name; select.appendChild(option); } }, loadRoulettePreset(name) { const itemsTextarea = document.getElementById('roulette-items'); if (name && this.state.roulettePresets[name]) { itemsTextarea.value = this.state.roulettePresets[name].join('\n'); } else { itemsTextarea.value = ''; } this.roulette.drawWheel(); }, saveRoulettePreset() { const name = prompt('プリセット名を入力してください:', document.getElementById('roulette-presets').value || ''); if (!name) return; const items = document.getElementById('roulette-items').value.split('\n').filter(Boolean); this.state.roulettePresets[name] = items; this.saveState(); this.renderRoulettePresets(); document.getElementById('roulette-presets').value = name; }, deleteRoulettePreset() { const name = document.getElementById('roulette-presets').value; if (name && confirm(`プリセット「${name}」を削除しますか？`)) { delete this.state.roulettePresets[name]; this.saveState(); this.renderRoulettePresets(); const nextPreset = Object.keys(this.state.roulettePresets)[0] || ''; document.getElementById('roulette-presets').value = nextPreset; this.loadRoulettePreset(nextPreset); } } });
+                Object.assign(App.roulette, { ctx: null, spinAngleStart: 0, startAngle: 0, spinTime: 0, spinTimeTotal: 0, isSpinning: false, getColors() { const isDark = App.state.theme === 'dark'; return [ isDark ? '#4f46e5' : '#6366f1', isDark ? '#db2777' : '#ec4899', isDark ? '#16a34a' : '#22c55e', isDark ? '#d97706' : '#f59e0b', isDark ? '#0891b2' : '#06b6d4', isDark ? '#6d28d9' : '#8b5cf6', isDark ? '#be185d' : '#db2777', isDark ? '#ca8a04' : '#eab308' ]; }, drawWheel() { const canvas = document.getElementById('rouletteCanvas'); if (!canvas.getContext) return; this.ctx = canvas.getContext('2d'); const items = document.getElementById('roulette-items').value.split('\n').filter(Boolean); if (items.length === 0) { this.ctx.clearRect(0, 0, canvas.width, canvas.height); return; } const arc = Math.PI / (items.length / 2); const outsideRadius = canvas.width / 2.2; const textRadius = outsideRadius * 0.75; this.ctx.clearRect(0, 0, canvas.width, canvas.height); this.ctx.strokeStyle = App.state.theme === 'dark' ? '#1a1a1a' : '#f3f4f6'; this.ctx.lineWidth = 3; for (let i = 0; i < items.length; i++) { const angle = this.startAngle + i * arc; this.ctx.fillStyle = this.getColors()[i % this.getColors().length]; this.ctx.beginPath(); this.ctx.arc(canvas.width / 2, canvas.height / 2, outsideRadius, angle, angle + arc, false); this.ctx.arc(canvas.width / 2, canvas.height / 2, 0, angle + arc, angle, true); this.ctx.stroke(); this.ctx.fill(); this.ctx.save(); this.ctx.fillStyle = "white"; this.ctx.translate(canvas.width / 2 + Math.cos(angle + arc / 2) * textRadius, canvas.height / 2 + Math.sin(angle + arc / 2) * textRadius); this.ctx.rotate(angle + arc / 2 + Math.PI / 2); const text = items[i]; this.ctx.font = 'bold 14px "Inter", "Noto Sans JP"'; this.ctx.fillText(text, -this.ctx.measureText(text).width / 2, 0); this.ctx.restore(); } }, spin() { if (this.isSpinning) return; const items = document.getElementById('roulette-items').value.split('\n').filter(Boolean); if(items.length < 2) { alert('ルーレットには2つ以上の項目が必要です。'); return; } document.getElementById('roulette-result').textContent = ''; this.isSpinning = true; App.sound.playDrumroll(9); this.spinAngleStart = Math.random() * 10 + 10; this.spinTime = 0; this.spinTimeTotal = 8000 + Math.random() * 2000; this.rotateWheel(); }, rotateWheel() { this.spinTime += 30; if (this.spinTime >= this.spinTimeTotal) { this.stopRotateWheel(); return; } const spinAngle = this.spinAngleStart - this.easeOut(this.spinTime, 0, this.spinAngleStart, this.spinTimeTotal); this.startAngle += (spinAngle * Math.PI / 180); this.drawWheel(); requestAnimationFrame(() => this.rotateWheel()); }, stopRotateWheel() { this.isSpinning = false; App.sound.stopDrumroll(); const items = document.getElementById('roulette-items').value.split('\n').filter(Boolean); if (items.length === 0) return; const arc = 2 * Math.PI / items.length; const arcd = 360 / items.length; const rotation = (this.startAngle * 180 / Math.PI) % 360; const relativePointerAngle = (270 - rotation + 360) % 360; const index = Math.floor(relativePointerAngle / arcd); const winner = items[index]; const resultEl = document.getElementById('roulette-result'); resultEl.textContent = winner; resultEl.classList.remove('fade-in'); void resultEl.offsetWidth; resultEl.classList.add('fade-in'); if(document.getElementById('remove-after-spin').checked) { const newItems = items.filter((_, i) => i !== index); document.getElementById('roulette-items').value = newItems.join('\n'); const presetName = document.getElementById('roulette-presets').value; if(presetName && App.state.roulettePresets[presetName]) { App.state.roulettePresets[presetName] = newItems; App.saveState(); } } this.drawWheel(); }, easeOut(t, b, c, d) { const ts = (t /= d) * t; const tc = ts * t; return b + c * (tc + -3 * ts + 3 * t); } });
+                Object.assign(App, { renderGachaDecks() { const select = document.getElementById('gacha-decks'); select.innerHTML = ''; for (const name in this.state.gachaDecks) { const option = document.createElement('option'); option.value = name; option.textContent = name; select.appendChild(option); } }, loadGachaDeck(name) { const editor = document.getElementById('custom-deck-editor'); if (name === 'カスタムデッキ') { document.getElementById('gacha-items').value = this.state.gachaDecks[name].join('\n'); editor.classList.remove('hidden'); } else { editor.classList.add('hidden'); } document.getElementById('gacha-decks').value = name; }, saveGachaDeck() { const items = document.getElementById('gacha-items').value.split('\n').filter(Boolean); this.state.gachaDecks['カスタムデッキ'] = items; this.saveState(); alert('カスタムデッキを保存しました！'); }, drawGacha() { const deckName = document.getElementById('gacha-decks').value; const deck = this.state.gachaDecks[deckName]; if (!deck || deck.length === 0) { document.getElementById('gacha-result').textContent = 'デッキに話題がありません！'; return; } const resultEl = document.getElementById('gacha-result'); const animationEl = document.getElementById('gacha-animation'); resultEl.textContent = '...'; animationEl.classList.remove('hidden'); setTimeout(() => { const randomIndex = Math.floor(Math.random() * deck.length); const topic = deck[randomIndex]; resultEl.textContent = topic; animationEl.classList.add('hidden'); }, 1000); } });
+                Object.assign(App.originalGacha, { renderPresets() { const select = document.getElementById('og-presets'); select.innerHTML = ''; for (const name in App.state.originalGachas) { const option = document.createElement('option'); option.value = name; option.textContent = name; select.appendChild(option); } }, loadPreset(name) { if (!name || !App.state.originalGachas[name]) { this.renderEditor([]); document.getElementById('og-presets').value = ''; return; } this.renderEditor(App.state.originalGachas[name]); document.getElementById('og-presets').value = name; }, savePreset() { const name = prompt('プリセット名を入力してください:', document.getElementById('og-presets').value || ''); if (!name) return; const items = []; const rows = document.querySelectorAll('#og-items-editor .og-item-row'); rows.forEach(row => { const item = row.querySelector('.og-item-name').value.trim(); const weight = parseFloat(row.querySelector('.og-item-weight').value); if (item && !isNaN(weight) && weight > 0) { items.push({ item, weight }); } }); App.state.originalGachas[name] = items; App.saveState(); this.renderPresets(); document.getElementById('og-presets').value = name; }, deletePreset() { const name = document.getElementById('og-presets').value; if (name && confirm(`プリセット「${name}」を削除しますか？`)) { delete App.state.originalGachas[name]; App.saveState(); this.renderPresets(); this.loadPreset(Object.keys(App.state.originalGachas)[0] || ''); } }, renderEditor(items) { const editor = document.getElementById('og-items-editor'); editor.innerHTML = ''; if (items.length > 0) { items.forEach(item => this.addEditorRow(item.item, item.weight)); } else { this.addEditorRow('', 1); } }, addEditorRow(name = '', weight = 1) { const editor = document.getElementById('og-items-editor'); const row = document.createElement('div'); row.className = 'flex gap-2 items-center og-item-row'; row.innerHTML = `<input type="text" class="input-field flex-grow rounded-md text-sm p-1 og-item-name" placeholder="項目名" value="${name}"><input type="number" class="input-field w-20 rounded-md text-sm p-1 og-item-weight" placeholder="確率" value="${weight}" min="0"><button class="btn-danger p-1 rounded-md text-xs"><i class="fas fa-trash"></i></button>`; row.querySelector('button').addEventListener('click', () => row.remove()); editor.appendChild(row); }, draw(count = 1) { const rows = document.querySelectorAll('#og-items-editor .og-item-row'); const pool = []; let totalWeight = 0; rows.forEach(row => { const item = row.querySelector('.og-item-name').value.trim(); const weight = parseFloat(row.querySelector('.og-item-weight').value); if (item && !isNaN(weight) && weight > 0) { pool.push({ item, weight }); totalWeight += weight; } }); if (pool.length === 0) { document.getElementById('og-results').innerHTML = '<p class="text-red-400">ガチャの項目がありません。</p>'; return; } const results = []; for (let i = 0; i < count; i++) { let rand = Math.random() * totalWeight; for (const entry of pool) { rand -= entry.weight; if (rand <= 0) { results.push(entry.item); break; } } } const resultsEl = document.getElementById('og-results'); resultsEl.innerHTML = results.map(r => `<p class="p-2 bg-gray-800 rounded-md mb-1">${r}</p>`).join(''); } });
+                Object.assign(App.dice, { isRolling: false, svgs: { d4: `<svg viewBox="0 0 100 100"><polygon class="dice-svg-shape" points="50,10 95,85 5,85"></polygon><text x="50" y="65" class="dice-svg-text">_RESULT_</text></svg>`, d6: `<svg viewBox="0 0 100 100"><rect class="dice-svg-shape" x="10" y="10" width="80" height="80" rx="10"></rect><text x="50" y="50" class="dice-svg-text">_RESULT_</text></svg>`, d10: `<svg viewBox="0 0 100 100"><polygon class="dice-svg-shape" points="50,10 95,40 85,90 15,90 5,40"></polygon><text x="50" y="55" class="dice-svg-text">_RESULT_</text></svg>`, d20: `<svg viewBox="0 0 100 100"><polygon class="dice-svg-shape" points="50,10 85,35 85,65 50,90 15,65 15,35"></polygon><text x="50" y="50" class="dice-svg-text">_RESULT_</text></svg>`, }, roll(sides) { if (this.isRolling) return; this.isRolling = true; const display = document.getElementById('dice-display'); const resultText = document.getElementById('dice-result-text'); resultText.textContent = ''; let rollCount = 0; const rollInterval = setInterval(() => { const randomResult = Math.floor(Math.random() * sides) + 1; const dieType = `d${sides}`; display.innerHTML = this.svgs[dieType].replace('_RESULT_', randomResult); rollCount++; if (rollCount > 10) { clearInterval(rollInterval); const finalResult = Math.floor(Math.random() * sides) + 1; display.innerHTML = this.svgs[dieType].replace('_RESULT_', finalResult); resultText.textContent = `結果: ${finalResult}`; this.isRolling = false; } }, 80); } });
+                Object.assign(App.workflow, { init() { const { duration, countdown } = App.state.workflow; if(duration.started) this.startDuration(true); else this.updateDurationDisplay(duration.elapsed); if(countdown.endTime && countdown.endTime > Date.now()) this.startCountdown(true); else this.updateCountdownDisplay(0); this.renderPostGenerator(); }, renderAll() { this.renderCounters(); }, formatTime(totalSeconds) { const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0'); const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0'); const seconds = (totalSeconds % 60).toString().padStart(2, '0'); return `${hours}:${minutes}:${seconds}`; }, startDuration(isResuming = false) { const { duration } = App.state.workflow; if (duration.intervalId) return; if (!isResuming) { duration.started = Date.now(); duration.elapsed = 0; } else if (duration.started === null) { duration.started = Date.now(); } this.updateDurationDisplay(Math.floor(duration.elapsed / 1000)); duration.intervalId = setInterval(() => { const elapsed = duration.elapsed + (Date.now() - duration.started); this.updateDurationDisplay(Math.floor(elapsed / 1000)); }, 1000); if(!isResuming) App.saveState(); }, pauseDuration() { const { duration } = App.state.workflow; if (duration.intervalId) { clearInterval(duration.intervalId); duration.elapsed += Date.now() - duration.started; duration.started = null; duration.intervalId = null; App.saveState(); } }, resetDuration() { this.pauseDuration(); App.state.workflow.duration.elapsed = 0; App.state.workflow.duration.started = null; this.updateDurationDisplay(0); App.saveState(); }, updateDurationDisplay(seconds) { document.getElementById('stream-duration').textContent = this.formatTime(seconds); }, startCountdown(isResuming = false) { const { countdown } = App.state.workflow; if (countdown.intervalId) clearInterval(countdown.intervalId); if(!isResuming) { const minutes = parseInt(document.getElementById('countdown-minutes').value, 10); if (isNaN(minutes) || minutes <= 0) return; countdown.endTime = Date.now() + minutes * 60 * 1000; } const update = () => { const remaining = Math.max(0, Math.floor((countdown.endTime - Date.now()) / 1000)); this.updateCountdownDisplay(remaining); if(remaining === 0) { clearInterval(countdown.intervalId); countdown.intervalId = null; } }; countdown.intervalId = setInterval(update, 1000); update(); App.saveState(); }, resetCountdown() { const { countdown } = App.state.workflow; if (countdown.intervalId) clearInterval(countdown.intervalId); countdown.intervalId = null; countdown.endTime = null; this.updateCountdownDisplay(0); App.saveState(); }, updateCountdownDisplay(seconds) { const minutes = Math.floor(seconds / 60).toString().padStart(2, '0'); const secs = (seconds % 60).toString().padStart(2, '0'); document.getElementById('countdown-display').textContent = `${minutes}:${secs}`; }, renderCounters() { const container = document.getElementById('counters-container'); container.innerHTML = ''; const { counters } = App.state.workflow; for(const name in counters) { const value = counters[name]; const counterEl = document.createElement('div'); counterEl.className = 'flex justify-between items-center bg-gray-800 p-2 rounded-md'; counterEl.innerHTML = `<span class="font-semibold">${name}</span><div class="flex items-center gap-2"><button class="btn-danger w-6 h-6 rounded-full text-xs" data-name="${name}" data-action="dec">-</button><span class="font-bold text-lg w-8 text-center">${value}</span><button class="btn-accent w-6 h-6 rounded-full text-xs" data-name="${name}" data-action="inc">+</button><button class="text-gray-500 hover:text-red-400 w-6 h-6" data-name="${name}" data-action="del"><i class="fas fa-trash-alt"></i></button></div>`; container.appendChild(counterEl); } container.querySelectorAll('button').forEach(btn => btn.addEventListener('click', (e) => this.handleCounterClick(e.currentTarget.dataset))); }, handleCounterClick({name, action}) { const { counters } = App.state.workflow; switch(action) { case 'inc': counters[name]++; break; case 'dec': counters[name] = Math.max(0, counters[name] - 1); break; case 'del': if(confirm(`カウンター「${name}」を削除しますか？`)) { delete counters[name]; } break; } App.saveState(); this.renderCounters(); }, addCounter() { const input = document.getElementById('new-counter-name'); const name = input.value.trim(); if(name && !App.state.workflow.counters[name]) { App.state.workflow.counters[name] = 0; App.saveState(); this.renderCounters(); input.value = ''; } else if (name) { alert('そのカウンターは既に存在します。') } }, renderPostGenerator() { const container = document.getElementById('post-template-fields'); const type = document.getElementById('post-template-select').value; let html = ''; switch(type) { case 'announcement': html = `<input type="text" id="post-title" class="input-field w-full text-sm rounded-md mb-2" placeholder="配信タイトル (例: 初見さん歓迎！雑談枠)"><input type="text" id="post-time" class="input-field w-full text-sm rounded-md" placeholder="配信開始時間 (例: 22:00)">`; break; case 'greeting': html = `<select id="post-greeting-type" class="select-field w-full text-sm rounded-md mb-2"><option value="おはV！">おはV</option><option value="おやV！">おやV</option></select><input type="text" id="post-greeting-message" class="input-field w-full text-sm rounded-md" placeholder="一言メッセージ (例: 今日も一日がんばるぞい！)">`; break; case 'thanks': html = `<input type="text" id="post-thanks-message" class="input-field w-full text-sm rounded-md" placeholder="感謝のメッセージ (例: みんなありがとう！)">`; break; } container.innerHTML = html; }, generateAndCopyPost() { const type = document.getElementById('post-template-select').value; let post = ''; let hashtags = '#IRIAM #IRIAMライバー'; switch(type) { case 'announcement': const title = document.getElementById('post-title').value || '配信'; const time = document.getElementById('post-time').value || '今から'; post = `【配信告知】\n\n⏰${time}〜\n「${title}」\n\n待ってるね！✨\n\n${hashtags}`; break; case 'greeting': const greetingType = document.getElementById('post-greeting-type').value; const greetingMessage = document.getElementById('post-greeting-message').value; if (greetingType === 'おはV！') hashtags += ' #おはようVライバー'; else if (greetingType === 'おやV！') hashtags += ' #おやすみVライバー'; post = `${greetingType}☀️\n\n${greetingMessage}\n\n${hashtags}`; break; case 'thanks': const thanksMessage = document.getElementById('post-thanks-message').value || '配信ありがとうございました！'; post = `${thanksMessage}✨\nリザルトはリプ欄へ！\n\n${hashtags}`; break; } const textarea = document.getElementById('generated-post'); textarea.value = post; textarea.select(); document.execCommand('copy'); } });
+                Object.assign(App.resources, {
+                    renderUrls() {
+                        const container = document.getElementById('urls-container');
+                        container.innerHTML = '';
+                        App.state.resources.urls.forEach(url => {
+                            const el = document.createElement('div');
+                            el.className = 'flex items-center gap-2 text-sm';
+                            
+                            let fullUrl = url.url.trim();
+                            if (fullUrl && !/^https?:\/\//i.test(fullUrl)) {
+                                fullUrl = 'https://' + fullUrl;
+                            }
+                            
+                            const isUrlEmpty = !url.url.trim();
+
+                            el.innerHTML = `
+                                <input type="text" value="${url.name}" class="input-field w-24 p-1 rounded-md" data-id="${url.id}" data-prop="name" placeholder="名前">
+                                <input type="text" value="${url.url}" class="input-field flex-grow p-1 rounded-md" data-id="${url.id}" data-prop="url" placeholder="URL">
+                                <a href="${isUrlEmpty ? 'javascript:void(0)' : fullUrl}" ${isUrlEmpty ? '' : 'target="_blank"'} class="p-2 ${isUrlEmpty ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-accent-color'}" title="${isUrlEmpty ? 'URLがありません' : 'リンクを開く'}">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                <button class="text-gray-500 hover:text-red-400" data-id="${url.id}" title="削除">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            `;
+                            container.appendChild(el);
+                        });
+                        container.querySelectorAll('input').forEach(input => {
+                            input.addEventListener('change', (e) => this.updateUrl(e.target.dataset.id, e.target.dataset.prop, e.target.value));
+                        });
+                        container.querySelectorAll('button').forEach(button => {
+                            button.addEventListener('click', (e) => this.deleteUrl(e.currentTarget.dataset.id));
+                        });
+                    },
+                    addUrl() {
+                        App.state.resources.urls.push({ id: App.generateId(), name: '', url: '' });
+                        App.saveState();
+                        this.renderUrls();
+                    },
+                    updateUrl(id, prop, value) {
+                        const url = App.state.resources.urls.find(u => u.id === id);
+                        if (url) {
+                            url[prop] = value;
+                            App.saveState();
+                            if (prop === 'url') {
+                                this.renderUrls();
+                            }
+                        }
+                    },
+                    deleteUrl(id) {
+                        App.state.resources.urls = App.state.resources.urls.filter(u => u.id !== id);
+                        App.saveState();
+                        this.renderUrls();
+                    }
+                });
+            })(App);
+
+            App.init();
+        });
+    </script>
+</body>
+</html>
+
