@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>筆灯 - 小説家の交流サイト</title>
+    <title>筆置 - 小説家の交流サイト</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -66,15 +66,61 @@
         .vis-item:hover { background: var(--accent-soft-color); }
         .vis-item + .vis-item { border-top:1px solid var(--border-color); }
         .vis-item.on { background: var(--accent-soft-color); }
+        /* 観葉植物の装飾（モンステラ・ポトス） */
+        #auth-screen, #app-screen { position: relative; z-index: 1; }
+        .plant-deco { position: fixed; z-index: 0; pointer-events: none; opacity: .15; }
+        .plant-tr { top: 3.4rem; right: -1.6rem; width: 150px; transform: scaleX(-1); }
+        .plant-bl { bottom: -1.2rem; left: -1.8rem; width: 170px; }
+        @media (max-width: 640px){ .plant-tr{ width: 96px; top: 3.4rem; } .plant-bl{ width: 110px; } }
+        .leaf-accent { display:inline-block; vertical-align:middle; opacity:.8; }
+        /* リッチエディタ & ブログ本文 */
+        .rt-toolbar { display:flex; flex-wrap:wrap; gap:.3rem; }
+        .rt-btn { min-width:2.2rem; height:2.2rem; padding:0 .5rem; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--border-color); border-radius:.45rem; background:var(--bg-color); color:var(--text-color); cursor:pointer; font-size:.85rem; transition: all .15s; }
+        .rt-btn:hover { background:var(--accent-soft-color); border-color:var(--accent-color); }
+        .rt-editor { min-height:340px; line-height:1.9; }
+        .rt-editor:focus { outline:none; }
+        .rt-editor:empty:before { content: attr(data-placeholder); color: var(--text-muted-color); }
+        .rt-editor h2, .blog-body.rich h2 { font-size:1.45rem; font-weight:700; margin:1.1em 0 .45em; line-height:1.4; }
+        .rt-editor h3, .blog-body.rich h3 { font-size:1.18rem; font-weight:700; margin:.9em 0 .35em; line-height:1.4; }
+        .rt-editor ul, .blog-body.rich ul { list-style: disc; padding-left:1.6em; margin:.6em 0; }
+        .rt-editor ol, .blog-body.rich ol { list-style: decimal; padding-left:1.6em; margin:.6em 0; }
+        .rt-editor li, .blog-body.rich li { margin:.2em 0; }
+        .rt-editor p, .blog-body.rich p { margin:.6em 0; }
+        .rt-editor u, .blog-body.rich u { text-decoration: underline; }
+        .blog-body.rich { white-space: normal; }
+        .blog-tag { display:inline-block; font-size:.7rem; padding:.1rem .55rem; border-radius:9999px; background:var(--accent-soft-color); color:var(--accent-color); }
     </style>
 </head>
 <body class="min-h-screen">
+
+<!-- ============ 観葉植物の装飾 ============ -->
+<!-- 右上から垂れるポトスのつる -->
+<svg class="plant-deco plant-tr" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M118 0 C116 34 92 46 98 80 C103 108 78 120 84 156 C88 178 74 188 70 200" fill="none" stroke="#4e6b3a" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#6f8f4a">
+        <path d="M118 14 C108 4 90 10 94 26 C97 38 110 44 124 46 C130 34 132 20 124 12 C122 10 120 12 118 14 Z"/>
+        <path d="M100 60 C88 54 74 64 82 78 C88 88 102 90 116 88 C118 74 114 60 104 56 C102 56 101 58 100 60 Z"/>
+        <path d="M96 116 C108 108 124 116 118 132 C113 144 99 146 86 142 C84 128 88 116 96 116 Z"/>
+        <path d="M82 158 C70 152 56 162 64 176 C70 186 84 188 98 186 C100 172 96 158 86 154 C84 154 83 156 82 158 Z"/>
+    </g>
+</svg>
+<!-- 左下のモンステラ -->
+<svg class="plant-deco plant-bl" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g stroke="#3f5730" stroke-width="4" stroke-linecap="round" fill="none">
+        <path d="M70 200 C66 168 70 150 84 132"/>
+        <path d="M120 200 C124 170 118 150 104 130"/>
+    </g>
+    <path fill="#5c7a3f" fill-rule="evenodd" d="M58 138 C22 134 6 104 12 78 C16 58 36 40 58 38 C80 40 100 58 104 78 C110 104 94 134 58 138 Z M58 56 C50 70 50 94 58 112 C66 94 66 70 58 56 Z M30 74 C38 78 44 86 46 98 C36 96 28 88 26 78 Z M86 74 C78 78 72 86 70 98 C80 96 88 88 90 78 Z M34 106 C42 108 48 114 50 124 C40 122 34 116 32 108 Z M82 106 C74 108 68 114 66 124 C76 122 82 116 84 108 Z"/>
+    <path fill="#6f8f4a" fill-rule="evenodd" d="M132 170 C104 167 92 144 96 124 C99 108 114 95 132 93 C150 95 165 108 168 124 C172 144 160 167 132 170 Z M132 107 C126 118 126 136 132 150 C138 136 138 118 132 107 Z M112 121 C118 124 122 130 124 139 C116 137 110 131 109 123 Z M152 121 C146 124 142 130 140 139 C148 137 154 131 155 123 Z"/>
+</svg>
 
 <!-- ============ 認証画面 ============ -->
 <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="serif text-4xl font-bold tracking-widest" style="color:var(--accent-color)">筆灯<span class="text-base align-top ml-1">ふでび</span></h1>
+            <h1 class="serif text-4xl font-bold tracking-widest inline-flex items-center justify-center gap-2" style="color:var(--accent-color)">
+                <svg viewBox="0 0 120 150" class="w-7 h-9" style="opacity:.85" aria-hidden="true"><path fill="#5c7a3f" fill-rule="evenodd" d="M58 104 C22 100 6 70 12 44 C16 24 36 6 58 4 C80 6 100 24 104 44 C110 70 94 100 58 104 Z M58 22 C50 36 50 60 58 78 C66 60 66 36 58 22 Z M30 40 C38 44 44 52 46 64 C36 62 28 54 26 44 Z M86 40 C78 44 72 52 70 64 C80 62 88 54 90 44 Z M34 72 C42 74 48 80 50 90 C40 88 34 82 32 74 Z M82 72 C74 74 68 80 66 90 C76 88 82 82 84 74 Z"/></svg>
+                筆置<span class="text-base align-top">ふでおき</span></h1>
             <p class="text-sm mt-2" style="color:var(--text-muted-color)">小説家のための、静かな交流の場</p>
         </div>
         <div class="card rounded-2xl p-6 fade-in">
@@ -112,7 +158,7 @@
 <div id="app-screen" class="hidden">
     <header class="sticky top-0 z-20 border-b" style="background-color:var(--header-bg-color); border-color:var(--border-color)">
         <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-            <h1 data-action="nav" data-view="home" class="serif text-xl font-bold tracking-wider cursor-pointer select-none" style="color:var(--accent-color)" title="ホームへ"><i class="fas fa-book-bookmark mr-1 text-base"></i>筆灯</h1>
+            <h1 data-action="nav" data-view="home" class="serif text-xl font-bold tracking-wider cursor-pointer select-none" style="color:var(--accent-color)" title="ホームへ"><i class="fas fa-book-bookmark mr-1 text-base"></i>筆置</h1>
             <div class="flex items-center gap-2">
                 <button data-action="bell" class="relative w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="通知">
                     <i class="fas fa-bell"></i>
@@ -126,10 +172,11 @@
     <main class="max-w-2xl mx-auto px-4 py-5 pb-safe">
         <!-- ホーム -->
         <section id="view-home" class="view space-y-4">
-            <div class="card rounded-2xl p-6">
-                <p class="text-sm" style="color:var(--text-muted-color)">おかえりなさい</p>
-                <h2 id="home-greeting" class="serif text-2xl font-bold mt-1"></h2>
-                <p class="text-sm mt-2" style="color:var(--text-muted-color)">今日も、ことばを紡ぎましょう。</p>
+            <div class="card rounded-2xl p-6 relative overflow-hidden">
+                <svg class="absolute -right-3 -top-3 w-24 h-24" style="opacity:.1" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="#5c7a3f" fill-rule="evenodd" d="M100 180 C44 174 18 124 28 82 C36 50 66 22 100 18 C134 22 164 50 172 82 C182 124 156 174 100 180 Z M100 46 C88 70 88 110 100 140 C112 110 112 70 100 46 Z M48 80 C62 86 72 100 76 120 C58 116 44 102 42 84 Z M152 80 C138 86 128 100 124 120 C142 116 156 102 158 84 Z"/></svg>
+                <p class="text-sm relative" style="color:var(--text-muted-color)">おかえりなさい</p>
+                <h2 id="home-greeting" class="serif text-2xl font-bold mt-1 relative"></h2>
+                <p class="text-sm mt-2 relative" style="color:var(--text-muted-color)">今日も、ことばを紡ぎましょう。</p>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <button class="card rounded-2xl p-5 text-left transition" data-action="nav" data-view="koryu">
@@ -172,7 +219,7 @@
                     <div class="flex items-center gap-2">
                         <div class="relative">
                             <button id="vis-btn" data-action="toggle-visibility" class="btn-ghost px-3 py-1.5 rounded-md text-sm font-semibold flex items-center whitespace-nowrap"><i class="fas fa-angle-down mr-1"></i>投稿先</button>
-                            <div id="vis-menu" class="hidden absolute right-0 bottom-full mb-2 w-60 card rounded-xl overflow-hidden z-30">
+                            <div id="vis-menu" class="hidden absolute right-0 top-full mt-2 w-60 card rounded-xl overflow-hidden z-30">
                                 <button data-action="set-visibility" data-vis="followers" class="vis-item"><i class="fas fa-user-group mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">フォロワーのみ</p><p class="text-xs" style="color:var(--text-muted-color)">あなたをフォローしている人だけに見えます</p></div></button>
                                 <button data-action="set-visibility" data-vis="public" class="vis-item"><i class="fas fa-globe mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">誰もが見える</p><p class="text-xs" style="color:var(--text-muted-color)">すべての利用者に見えます</p></div></button>
                                 <button data-action="set-visibility" data-vis="private" class="vis-item"><i class="fas fa-lock mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">自分だけ</p><p class="text-xs" style="color:var(--text-muted-color)">誰にも見えません（自分用のメモ）</p></div></button>
@@ -188,9 +235,25 @@
         <!-- ブログ -->
         <section id="view-blog" class="view hidden space-y-4">
             <div id="blog-author-bar" class="hidden">
-                <button data-action="blog-new" class="btn-accent w-full py-2.5 rounded-md font-semibold"><i class="fas fa-pen-nib mr-2"></i>新しい記事を書く</button>
+                <button data-action="blog-new" class="btn-accent w-full py-2.5 rounded-md font-semibold"><i class="fas fa-pen-nib mr-2"></i>記事を書く</button>
             </div>
-            <div id="blog-list" class="space-y-4"></div>
+            <div class="card rounded-2xl p-4 space-y-3">
+                <div class="flex gap-2 items-center">
+                    <i class="fas fa-magnifying-glass" style="color:var(--text-muted-color)"></i>
+                    <input type="text" id="blog-search" class="input-field flex-1 px-3 py-1.5 rounded-md text-sm" placeholder="タイトル・本文を検索…">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <select id="blog-sort" class="input-field px-2 py-1.5 rounded-md text-xs">
+                        <option value="new">新しい順</option>
+                        <option value="old">古い順</option>
+                        <option value="bookmarks">ブックマークが多い順</option>
+                    </select>
+                    <select id="blog-tag" class="input-field px-2 py-1.5 rounded-md text-xs"></select>
+                    <select id="blog-author" class="input-field px-2 py-1.5 rounded-md text-xs"></select>
+                </div>
+            </div>
+            <div id="blog-list" class="space-y-3"></div>
+            <div id="blog-pager" class="flex items-center justify-between gap-2"></div>
         </section>
 
         <!-- 動的ビュー（戻る付き） -->
@@ -205,7 +268,7 @@
         <section id="view-settings" class="view hidden space-y-4">
             <div class="card rounded-2xl overflow-hidden" id="settings-menu"></div>
             <button data-action="logout" class="btn-danger w-full py-2.5 rounded-md font-semibold"><i class="fas fa-right-from-bracket mr-2"></i>ログアウト</button>
-            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆灯 試作版 v0.4 ／ データはこの端末内に保存されます</p>
+            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆置 試作版 v0.5 ／ データはこの端末内に保存されます</p>
         </section>
     </main>
 
@@ -223,7 +286,7 @@
 
 <script>
 /* =========================================================
-   筆灯 (Fudebi) — 小説家の交流サイト 試作版 v0.4
+   筆置 (Fudeoki) — 小説家の交流サイト 試作版 v0.5
    データは localStorage に保存（この端末のみ）。
    ※試作のためパスワードは簡易ハッシュです。本番運用時は
      クラウド/サーバー側の認証に置き換えてください。
@@ -258,6 +321,13 @@
         p.comments = p.comments || [];
         if (!p.visibility) p.visibility = 'public';   // 旧投稿は全体公開扱い
     });
+    blogs.forEach(b => {
+        b.comments = b.comments || [];
+        b.tags = b.tags || [];
+        b.bookmarks = b.bookmarks || [];
+        b.format = b.format || 'text';        // 旧記事はプレーンテキスト
+        if (!b.updatedAt) b.updatedAt = b.createdAt;
+    });
 
     const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.session, session); };
 
@@ -274,6 +344,20 @@
     const initial = name => (name||'？').trim().charAt(0).toUpperCase();
     function timeAgo(ts){ const d=(Date.now()-ts)/1000; if(d<60)return 'たった今'; if(d<3600)return Math.floor(d/60)+'分前'; if(d<86400)return Math.floor(d/3600)+'時間前'; if(d<604800)return Math.floor(d/86400)+'日前'; return new Date(ts).toLocaleDateString('ja-JP'); }
     const fmtDate = ts => new Date(ts).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+    const fmtDateTime = ts => { const d=new Date(ts), p=n=>('0'+n).slice(-2); return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+    // ブログ本文（リッチHTML）の無害化と、プレビュー用のテキスト抽出
+    const RICH_TAGS = new Set(['H1','H2','H3','B','STRONG','I','EM','U','S','UL','OL','LI','P','BR','DIV','SPAN','BLOCKQUOTE']);
+    function sanitizeNode(src, dst){
+        src.childNodes.forEach(ch=>{
+            if(ch.nodeType===3){ dst.appendChild(document.createTextNode(ch.nodeValue)); }
+            else if(ch.nodeType===1){
+                if(RICH_TAGS.has(ch.tagName)){ const el=document.createElement(ch.tagName.toLowerCase()); sanitizeNode(ch, el); dst.appendChild(el); }
+                else { sanitizeNode(ch, dst); } // 許可外タグは中身だけ残す
+            }
+        });
+    }
+    function sanitizeBlog(html){ const s=document.createElement('div'); s.innerHTML=html||''; const d=document.createElement('div'); sanitizeNode(s,d); return d.innerHTML; }
+    function stripHtml(html){ const d=document.createElement('div'); d.innerHTML=html||''; return (d.textContent||'').replace(/\s+/g,' ').trim(); }
     const validUrl = u => /^https?:\/\/.+/i.test(u);
     const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
@@ -333,7 +417,7 @@
         const isFirst=users.length===0;
         users.push({ id:uid(), penname, email, pw:hash(pw), role:isFirst?'admin':'member', bio:'', genres:[], links:[], following:[], followers:[], blocked:[], muteWords:[], blogComments:true, createdAt:Date.now() });
         session=users[users.length-1].id; persist(); e.target.reset(); showApp();
-        toast(isFirst?'管理人として登録しました':'ようこそ、筆灯へ');
+        toast(isFirst?'管理人として登録しました':'ようこそ、筆置へ');
     });
     $('#login-form').addEventListener('submit', e=>{
         e.preventDefault();
@@ -459,40 +543,85 @@
     }
 
     // ================= ブログ =================
+    const BLOG_PAGE_SIZE = 20;
+    let blogSort='new', blogTag='', blogAuthor='', blogSearch='', blogPage=0;
+
+    function filteredBlogs(){
+        let list=blogs.slice();
+        const q=blogSearch.trim().toLowerCase();
+        if(q) list=list.filter(b=>(b.title||'').toLowerCase().includes(q) || stripHtml(b.body).toLowerCase().includes(q));
+        if(blogTag) list=list.filter(b=>(b.tags||[]).includes(blogTag));
+        if(blogAuthor) list=list.filter(b=>b.authorId===blogAuthor);
+        if(blogSort==='old') list.sort((a,b)=>a.createdAt-b.createdAt);
+        else if(blogSort==='bookmarks') list.sort((a,b)=>((b.bookmarks||[]).length-(a.bookmarks||[]).length)||(b.createdAt-a.createdAt));
+        else list.sort((a,b)=>b.createdAt-a.createdAt);
+        return list;
+    }
     function renderBlog(){
         $('#blog-author-bar').classList.toggle('hidden', !canWriteBlog(me()));
-        const list=$('#blog-list');
-        if(!blogs.length){ list.innerHTML=emptyState('fa-book-open','まだ記事がありません', canWriteBlog(me())?'「新しい記事を書く」から投稿できます。':'管理人・ブロガーの記事がここに並びます。'); return; }
-        list.innerHTML=blogs.map(b=>{ const a=userById(b.authorId); const prev=b.body.replace(/\s+/g,' ').slice(0,90);
+        // ソート・絞り込みUIの選択肢を更新
+        const allTags=[...new Set(blogs.flatMap(b=>b.tags||[]))].sort();
+        const authorIds=[...new Set(blogs.map(b=>b.authorId))];
+        const sortSel=$('#blog-sort'); if(sortSel) sortSel.value=blogSort;
+        const tagSel=$('#blog-tag'); if(tagSel) tagSel.innerHTML=`<option value="">すべてのタグ</option>`+allTags.map(t=>`<option value="${esc(t)}" ${t===blogTag?'selected':''}>${esc(t)}</option>`).join('');
+        const authSel=$('#blog-author'); if(authSel) authSel.innerHTML=`<option value="">すべての執筆者</option>`+authorIds.map(aid=>{ const au=userById(aid); return `<option value="${aid}" ${aid===blogAuthor?'selected':''}>${esc(au?au.penname:'退会者')}</option>`; }).join('');
+        const srch=$('#blog-search'); if(srch && srch.value!==blogSearch) srch.value=blogSearch;
+
+        const list=$('#blog-list'), pager=$('#blog-pager');
+        if(!blogs.length){ list.innerHTML=emptyState('fa-book-open','まだ記事がありません', canWriteBlog(me())?'「記事を書く」から投稿できます。':'管理人・ブロガーの記事がここに並びます。'); pager.innerHTML=''; return; }
+        const all=filteredBlogs();
+        if(!all.length){ list.innerHTML=emptyState('fa-magnifying-glass','記事が見つかりませんでした','検索条件を変えてお試しください。'); pager.innerHTML=''; return; }
+        const pages=Math.ceil(all.length/BLOG_PAGE_SIZE);
+        if(blogPage>=pages) blogPage=pages-1; if(blogPage<0) blogPage=0;
+        const slice=all.slice(blogPage*BLOG_PAGE_SIZE, blogPage*BLOG_PAGE_SIZE+BLOG_PAGE_SIZE);
+        list.innerHTML=slice.map(b=>{ const a=userById(b.authorId); const prev=stripHtml(b.body).slice(0,80);
+            const tags=(b.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
             return `<button data-action="open-blog" data-id="${b.id}" class="card rounded-2xl p-5 w-full text-left transition fade-in">
+                <div class="text-[11px] mb-1" style="color:var(--text-muted-color)"><i class="far fa-clock mr-1"></i>${fmtDateTime(b.createdAt)}</div>
                 <h3 class="serif text-lg font-bold leading-snug">${esc(b.title)}</h3>
-                <p class="text-sm mt-2" style="color:var(--text-muted-color)">${esc(prev)}${b.body.length>90?'…':''}</p>
+                <p class="text-sm mt-2" style="color:var(--text-muted-color)">${esc(prev)}${stripHtml(b.body).length>80?'…':''}</p>
+                ${tags?`<div class="flex flex-wrap gap-1 mt-2">${tags}</div>`:''}
                 <div class="flex items-center gap-2 mt-3 text-xs">${avatar(a,'w-6 h-6 text-xs')}<span class="font-semibold">${esc(a?a.penname:'退会者')}</span>${roleBadge(a&&a.role)}
-                    <span style="color:var(--text-muted-color)">${fmtDate(b.createdAt)}</span>
-                    <span class="ml-auto" style="color:var(--text-muted-color)"><i class="far fa-comment mr-1"></i>${(b.comments||[]).length}</span></div>
+                    <span class="ml-auto" style="color:var(--text-muted-color)"><i class="far fa-bookmark mr-1"></i>${(b.bookmarks||[]).length}</span>
+                    <span style="color:var(--text-muted-color)"><i class="far fa-comment mr-1"></i>${(b.comments||[]).length}</span></div>
             </button>`; }).join('');
+        // ページをめくる
+        pager.innerHTML = pages>1 ? `
+            <button data-action="blog-page" data-dir="-1" class="btn-ghost px-4 py-2 rounded-md text-sm ${blogPage<=0?'opacity-40 pointer-events-none':''}"><i class="fas fa-chevron-left mr-1"></i>前のページ</button>
+            <span class="text-xs" style="color:var(--text-muted-color)">${blogPage+1} / ${pages}　（全${all.length}件）</span>
+            <button data-action="blog-page" data-dir="1" class="btn-ghost px-4 py-2 rounded-md text-sm ${blogPage>=pages-1?'opacity-40 pointer-events-none':''}">次のページ<i class="fas fa-chevron-right ml-1"></i></button>` : '';
     }
     function renderBlogDetail(id){
         const b=blogs.find(x=>x.id===id); if(!b){ back(); return; }
         const a=userById(b.authorId), u=me();
         const canDel=u&&(u.id===b.authorId||u.role==='admin');
+        const canEdit=u&&(u.id===b.authorId||u.role==='admin');
         const allowComment = !a || a.blogComments;
+        const marked=(b.bookmarks||[]).includes(session);
+        const tags=(b.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
+        const bodyHtml = b.format==='html' ? sanitizeBlog(b.body) : esc(b.body);
         const comments=(b.comments||[]).filter(c=>!blockedEither(session,c.authorId)).map(c=>{ const ca=userById(c.authorId);
             return `<div class="flex gap-2 mt-3">${avatar(ca,'w-7 h-7 text-xs',true)}
                 <div class="flex-1 rounded-lg px-3 py-2" style="background:var(--bg-color)">
-                    <div class="flex items-center gap-2 text-xs">${nameTag(ca)}<span class="text-[10px]" style="color:var(--text-muted-color)">${timeAgo(c.createdAt)}</span></div>
+                    <div class="flex items-center gap-2 text-xs">${nameTag(ca)}<span class="text-[10px]" style="color:var(--text-muted-color)">${timeAgo(c.createdAt)}</span>
+                    ${ca&&ca.id!==session?`<button data-action="report" data-rtype="comment" data-id="${c.id}" class="ml-auto text-[10px]" style="color:var(--text-muted-color)" title="通報"><i class="fas fa-flag"></i></button>`:''}</div>
                     <p class="text-sm mt-0.5 whitespace-pre-wrap break-words">${esc(c.body)}</p></div></div>`; }).join('');
         $('#view-blog-detail').innerHTML = `${backBar('記事一覧')}
             <article class="card rounded-2xl p-6">
                 <h1 class="serif text-2xl font-bold leading-snug">${esc(b.title)}</h1>
-                <div class="flex items-center gap-2 mt-3 mb-5 pb-5 border-b" style="border-color:var(--border-color)">${avatar(a,'w-8 h-8 text-sm',true)}
-                    <div><div class="flex items-center gap-2 text-sm">${nameTag(a)}</div><span class="text-xs" style="color:var(--text-muted-color)">${fmtDate(b.createdAt)}</span></div>
-                    ${canDel?`<button data-action="del-blog" data-id="${b.id}" class="ml-auto btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-trash mr-1"></i>削除</button>`:`<button data-action="report" data-rtype="blog" data-id="${b.id}" class="ml-auto btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-flag mr-1"></i>通報</button>`}
+                <div class="flex items-center gap-2 mt-3 mb-3">${avatar(a,'w-8 h-8 text-sm',true)}
+                    <div class="min-w-0"><div class="flex items-center gap-2 text-sm">${nameTag(a)}</div><span class="text-xs" style="color:var(--text-muted-color)"><i class="far fa-clock mr-1"></i>${fmtDateTime(b.createdAt)}${b.updatedAt&&b.updatedAt>b.createdAt+60000?`（更新 ${fmtDateTime(b.updatedAt)}）`:''}</span></div>
+                    <button data-action="blog-bookmark" data-id="${b.id}" class="ml-auto px-2 py-1 rounded-md text-sm" title="ブックマーク" style="${marked?'color:var(--accent-color)':'color:var(--text-muted-color)'}"><i class="fa-${marked?'solid':'regular'} fa-bookmark"></i> ${(b.bookmarks||[]).length}</button>
                 </div>
-                <div class="blog-body serif">${esc(b.body)}</div>
+                ${tags?`<div class="flex flex-wrap gap-1 mb-4">${tags}</div>`:''}
+                <div class="flex items-center gap-2 mb-5 pb-5 border-b" style="border-color:var(--border-color)">
+                    ${canEdit?`<button data-action="edit-blog" data-id="${b.id}" class="btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-pen mr-1"></i>編集</button>`:''}
+                    ${canDel?`<button data-action="del-blog" data-id="${b.id}" class="btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-trash mr-1"></i>削除</button>`:`<button data-action="report" data-rtype="blog" data-id="${b.id}" class="btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-flag mr-1"></i>通報</button>`}
+                </div>
+                <div class="blog-body serif ${b.format==='html'?'rich':''}">${bodyHtml}</div>
             </article>
             <div class="card rounded-2xl p-5">
-                <h3 class="font-bold mb-2"><i class="far fa-comment mr-2" style="color:var(--accent-color)"></i>コメント（${(b.comments||[]).length}）</h3>
+                <h3 class="font-bold mb-2"><i class="far fa-comment mr-2" style="color:var(--accent-color)"></i>読者からのコメント（${(b.comments||[]).length}）</h3>
                 <div>${comments || `<p class="text-sm" style="color:var(--text-muted-color)">${allowComment?'最初のコメントを書いてみましょう。':''}</p>`}</div>
                 ${allowComment?`<div class="flex gap-2 mt-4"><input type="text" id="blog-comment-input" class="input-field flex-1 px-3 py-2 rounded-md text-sm" placeholder="コメントを書く…" maxlength="500"><button data-action="blog-comment-send" data-id="${b.id}" class="btn-accent px-4 rounded-md text-sm font-semibold">送信</button></div>`
                     : `<p class="text-sm mt-3" style="color:var(--text-muted-color)"><i class="fas fa-comment-slash mr-1"></i>この記事ではコメントを受け付けていません。</p>`}
@@ -500,11 +629,25 @@
     }
     function renderBlogEdit(id){
         const b = id ? blogs.find(x=>x.id===id) : null;
+        const bodyInit = b ? (b.format==='html' ? sanitizeBlog(b.body) : esc(b.body).replace(/\n/g,'<br>')) : '';
+        const tagsInit = b ? (b.tags||[]).join('、') : '';
         $('#view-blog-edit').innerHTML = `${backBar('戻る')}
             <div class="card rounded-2xl p-5 space-y-4">
-                <h2 class="serif text-xl font-bold">${b?'記事を編集':'記事を書く'}</h2>
-                <input type="text" id="blog-edit-title" maxlength="80" class="input-field w-full px-3 py-2 rounded-md" placeholder="タイトル" value="${b?esc(b.title):''}">
-                <textarea id="blog-edit-body" rows="14" maxlength="20000" class="textarea-field w-full px-3 py-2 rounded-md serif resize-none" placeholder="本文（改行はそのまま反映されます）">${b?esc(b.body):''}</textarea>
+                <input type="text" id="blog-edit-title" maxlength="80" class="input-field w-full px-3 py-2 rounded-md serif text-lg" placeholder="タイトル" value="${b?esc(b.title):''}">
+                <input type="text" id="blog-edit-tags" maxlength="120" class="input-field w-full px-3 py-2 rounded-md text-sm" placeholder="タグ（例：ファンタジー、連載、創作論）※読点や，で区切る" value="${esc(tagsInit)}">
+                <div class="rt-toolbar pb-2 border-b" style="border-color:var(--border-color)">
+                    <button class="rt-btn" data-rt="formatBlock" data-val="&lt;h2&gt;" title="大見出し">見出し<span class="text-[10px] ml-0.5">大</span></button>
+                    <button class="rt-btn" data-rt="formatBlock" data-val="&lt;h3&gt;" title="小見出し">見出し<span class="text-[10px] ml-0.5">小</span></button>
+                    <button class="rt-btn" data-rt="formatBlock" data-val="&lt;p&gt;" title="本文（標準）"><i class="fas fa-paragraph"></i></button>
+                    <span class="mx-1" style="color:var(--border-color)">|</span>
+                    <button class="rt-btn" data-rt="bold" title="太字"><i class="fas fa-bold"></i></button>
+                    <button class="rt-btn" data-rt="italic" title="斜体"><i class="fas fa-italic"></i></button>
+                    <button class="rt-btn" data-rt="underline" title="下線"><i class="fas fa-underline"></i></button>
+                    <span class="mx-1" style="color:var(--border-color)">|</span>
+                    <button class="rt-btn" data-rt="insertUnorderedList" title="箇条書き"><i class="fas fa-list-ul"></i></button>
+                    <button class="rt-btn" data-rt="insertOrderedList" title="数字付き箇条書き"><i class="fas fa-list-ol"></i></button>
+                </div>
+                <div id="blog-edit-body" contenteditable="true" class="rt-editor serif w-full" data-placeholder="ここに本文を書きましょう。">${bodyInit}</div>
                 <div class="flex justify-end gap-2"><button data-action="back" class="btn-ghost px-4 py-2 rounded-md text-sm">キャンセル</button>
                 <button data-action="blog-publish" data-id="${b?b.id:''}" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">${b?'更新する':'公開する'}</button></div>
             </div>`;
@@ -656,7 +799,7 @@
                     <textarea id="fb-input" rows="4" maxlength="2000" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="ご感想・ご要望・不具合など、お気軽にどうぞ"></textarea>
                     <div class="flex items-center justify-between mt-2"><p id="fb-msg" class="text-xs text-emerald-400 hidden">送信しました。ありがとうございます。</p>
                     <button data-action="send-feedback" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold ml-auto">送信する</button></div></div>
-                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆灯（ふでび） 試作版 v0.4</p></div>`);
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆置（ふでおき） 試作版 v0.5</p></div>`);
         } else if(page==='admin'){
             html = wrap('管理人メニュー', `
                 <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1"><i class="fas fa-users-gear mr-2" style="color:var(--accent-color)"></i>ユーザー管理</h3>
@@ -773,13 +916,17 @@
             case 'edit-blog': renderBlogEdit(id); push('blog-edit', null); break;
             case 'open-blog': push('blog-detail', ()=>renderBlogDetail(id)); break;
             case 'blog-publish': {
-                const title=$('#blog-edit-title').value.trim(), body=$('#blog-edit-body').value.trim();
-                if(!title||!body){ toast('タイトルと本文を入力してください'); break; }
+                const title=$('#blog-edit-title').value.trim();
+                const bodyHtml=sanitizeBlog($('#blog-edit-body').innerHTML);
+                const tags=[...new Set($('#blog-edit-tags').value.split(/[,、，\n]/).map(s=>s.trim()).filter(Boolean))].slice(0,8);
+                if(!title || !stripHtml(bodyHtml)){ toast('タイトルと本文を入力してください'); break; }
                 if(!canWriteBlog(u)){ toast('権限がありません'); break; }
-                if(id){ const b=blogs.find(x=>x.id===id); b.title=title; b.body=body; toast('記事を更新しました'); }
-                else { blogs.unshift({id:uid(),authorId:session,title,body,createdAt:Date.now(),comments:[]}); toast('記事を公開しました'); }
+                if(id){ const b=blogs.find(x=>x.id===id); b.title=title; b.body=bodyHtml; b.tags=tags; b.format='html'; b.updatedAt=Date.now(); toast('記事を更新しました'); }
+                else { blogs.unshift({id:uid(),authorId:session,title,body:bodyHtml,tags,format:'html',createdAt:Date.now(),updatedAt:Date.now(),comments:[],bookmarks:[]}); toast('記事を公開しました'); }
                 persist(); back(); renderBlog();
             } break;
+            case 'blog-bookmark': { const b=blogs.find(x=>x.id===id); if(!b)break; b.bookmarks=b.bookmarks||[]; const i=b.bookmarks.indexOf(session), on=i<0; if(on)b.bookmarks.push(session); else b.bookmarks.splice(i,1); persist(); renderBlogDetail(id); toast(on?'ブックマークしました':'ブックマークを外しました'); } break;
+            case 'blog-page': { blogPage += (+t.dataset.dir); renderBlog(); window.scrollTo({top:0,behavior:'smooth'}); } break;
             case 'blog-comment-send': { const b=blogs.find(x=>x.id===id); const input=$('#blog-comment-input'); const body=input.value.trim(); if(!body)break; (b.comments=b.comments||[]).push({id:uid(),authorId:session,body,createdAt:Date.now()}); addNotif(b.authorId,'blogcomment',session,b.id); persist(); renderBlogDetail(id); updateBell(); } break;
             case 'del-blog': if(confirm('この記事を削除しますか？')){ blogs=blogs.filter(x=>x.id!==id); persist(); if(hist[hist.length-1].view==='blog-detail') back(); else renderSubpage('blog'); renderBlog(); } break;
 
@@ -863,6 +1010,21 @@
     document.addEventListener('input', e=>{
         if(e.target.id==='post-input'){ const c=$('#post-count'); if(c)c.textContent=`${e.target.value.length} / ${POST_MAX}`; }
         else if(e.target.id==='search-input'){ searchQuery=e.target.value; renderFeed(); }
+        else if(e.target.id==='blog-search'){ blogSearch=e.target.value; blogPage=0; renderBlog(); }
+    });
+
+    // ブログのソート・絞り込み（select）
+    document.addEventListener('change', e=>{
+        if(e.target.id==='blog-sort'){ blogSort=e.target.value; blogPage=0; renderBlog(); }
+        else if(e.target.id==='blog-tag'){ blogTag=e.target.value; blogPage=0; renderBlog(); }
+        else if(e.target.id==='blog-author'){ blogAuthor=e.target.value; blogPage=0; renderBlog(); }
+    });
+
+    // 記事作成：書式ツールバー（選択範囲を保つため mousedown で実行）
+    document.addEventListener('mousedown', e=>{
+        const btn=e.target.closest('[data-rt]'); if(!btn) return;
+        e.preventDefault();
+        document.execCommand(btn.dataset.rt, false, btn.dataset.val || null);
     });
 
     // インポート（動的生成のため委譲）
