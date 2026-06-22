@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>筆灯 - 小説家の交流サイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg-color: #2c2c2c;
+            --border-color: #444444;
+            --text-color: #e0e0e0;
+            --text-muted-color: #a0a0a0;
+            --accent-color: #a78bfa;        /* やわらかな藤色 */
+            --accent-hover-color: #8b5cf6;
+            --accent-soft-color: rgba(167,139,250,0.12);
+            --danger-color: #f43f5e;
+            --danger-hover-color: #e11d48;
+            --header-bg-color: #212121;
+        }
+        html.light {
+            --bg-color: #f5f3ef;
+            --card-bg-color: #ffffff;
+            --border-color: #e2ddd3;
+            --text-color: #2a2622;
+            --text-muted-color: #8a8175;
+            --accent-color: #7c3aed;
+            --accent-hover-color: #6d28d9;
+            --accent-soft-color: rgba(124,58,237,0.10);
+            --header-bg-color: #ffffff;
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .serif { font-family: 'Noto Serif JP', serif; }
+        .card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.08);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .btn-accent:hover { background-color: var(--accent-hover-color); }
+        .btn-accent:active { transform: translateY(1px); }
+        .btn-ghost {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .btn-ghost:hover { background-color: var(--accent-soft-color); border-color: var(--accent-color); }
+        .btn-danger { background-color: var(--danger-color); color: white; transition: background-color 0.2s; }
+        .btn-danger:hover { background-color: var(--danger-hover-color); }
+        .input-field, .textarea-field, .select-field {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: border-color 0.2s;
+        }
+        .input-field:focus, .textarea-field:focus, .select-field:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px var(--accent-soft-color);
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted-color); }
+
+        .nav-btn { color: var(--text-muted-color); transition: color 0.2s; }
+        .nav-btn.active { color: var(--accent-color); }
+        .nav-btn.active .nav-icon { transform: translateY(-2px); }
+        .nav-icon { transition: transform 0.2s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        .badge { font-size: 0.65rem; padding: 0.1rem 0.45rem; border-radius: 9999px; font-weight: 600; }
+        .badge-admin { background: #f59e0b; color: #1a1a1a; }
+        .badge-author { background: var(--accent-color); color: #fff; }
+        .badge-member { background: var(--border-color); color: var(--text-muted-color); }
+
+        .avatar { display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; flex-shrink:0; }
+        .blog-body { white-space: pre-wrap; line-height: 1.9; }
+
+        /* iOS セーフエリア対応 */
+        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 4.5rem); }
+        .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ 認証画面 ============ -->
+<div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="serif text-4xl font-bold tracking-widest" style="color:var(--accent-color)">筆灯<span class="text-base align-top ml-1">ふでび</span></h1>
+            <p class="text-sm mt-2" style="color:var(--text-muted-color)">小説家のための、静かな交流の場</p>
+        </div>
+
+        <div class="card rounded-2xl p-6 fade-in">
+            <!-- タブ -->
+            <div class="flex mb-6 rounded-lg overflow-hidden border" style="border-color:var(--border-color)">
+                <button id="tab-login" class="flex-1 py-2 text-sm font-semibold btn-accent">ログイン</button>
+                <button id="tab-register" class="flex-1 py-2 text-sm font-semibold btn-ghost border-0">新規登録</button>
+            </div>
+
+            <!-- ログインフォーム -->
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">メールアドレス</label>
+                    <input type="email" id="login-email" required class="input-field w-full px-3 py-2 rounded-md" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">パスワード</label>
+                    <input type="password" id="login-password" required class="input-field w-full px-3 py-2 rounded-md" placeholder="••••••••">
+                </div>
+                <p id="login-error" class="text-xs text-rose-400 hidden"></p>
+                <button type="submit" class="btn-accent w-full py-2.5 rounded-md font-semibold">ログイン</button>
+            </form>
+
+            <!-- 登録フォーム -->
+            <form id="register-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">ペンネーム</label>
+                    <input type="text" id="reg-penname" required maxlength="24" class="input-field w-full px-3 py-2 rounded-md" placeholder="例：夜長 灯">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">メールアドレス <span class="text-rose-400">*必須</span></label>
+                    <input type="email" id="reg-email" required class="input-field w-full px-3 py-2 rounded-md" placeholder="you@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">パスワード（6文字以上）</label>
+                    <input type="password" id="reg-password" required minlength="6" class="input-field w-full px-3 py-2 rounded-md" placeholder="••••••••">
+                </div>
+                <p id="reg-error" class="text-xs text-rose-400 hidden"></p>
+                <button type="submit" class="btn-accent w-full py-2.5 rounded-md font-semibold">登録してはじめる</button>
+                <p class="text-xs text-center" style="color:var(--text-muted-color)">最初に登録した方が管理人になります。</p>
+            </form>
+        </div>
+
+        <p class="text-[11px] text-center mt-4 leading-relaxed" style="color:var(--text-muted-color)">
+            <i class="fas fa-circle-info mr-1"></i>これは試作版です。アカウントや投稿はこの端末のブラウザ内にのみ保存され、他の端末とは共有されません。
+        </p>
+    </div>
+</div>
+
+<!-- ============ アプリ本体 ============ -->
+<div id="app-screen" class="hidden">
+    <!-- ヘッダー -->
+    <header class="sticky top-0 z-20 border-b" style="background-color:var(--header-bg-color); border-color:var(--border-color)">
+        <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+            <h1 class="serif text-xl font-bold tracking-wider" style="color:var(--accent-color)">筆灯</h1>
+            <div class="flex items-center gap-3">
+                <button id="theme-toggle" class="w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="テーマ切替">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div id="header-avatar" class="avatar w-9 h-9 rounded-full text-sm"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メイン -->
+    <main class="max-w-2xl mx-auto px-4 py-5 pb-safe">
+
+        <!-- ホーム -->
+        <section id="view-home" class="view space-y-4">
+            <div class="card rounded-2xl p-6">
+                <p class="text-sm" style="color:var(--text-muted-color)">おかえりなさい</p>
+                <h2 id="home-greeting" class="serif text-2xl font-bold mt-1"></h2>
+                <p class="text-sm mt-2" style="color:var(--text-muted-color)">今日も、ことばを紡ぎましょう。</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button class="home-nav card rounded-2xl p-5 text-left hover:border-accent transition" data-view="koryu">
+                    <i class="fas fa-comments text-2xl" style="color:var(--accent-color)"></i>
+                    <p class="font-bold mt-3">交流</p>
+                    <p class="text-xs mt-1" style="color:var(--text-muted-color)">仲間とつながる</p>
+                </button>
+                <button class="home-nav card rounded-2xl p-5 text-left hover:border-accent transition" data-view="blog">
+                    <i class="fas fa-book-open text-2xl" style="color:var(--accent-color)"></i>
+                    <p class="font-bold mt-3">ブログ</p>
+                    <p class="text-xs mt-1" style="color:var(--text-muted-color)">記事を読む・書く</p>
+                </button>
+                <button class="home-nav card rounded-2xl p-5 text-left hover:border-accent transition" data-view="settings">
+                    <i class="fas fa-gear text-2xl" style="color:var(--accent-color)"></i>
+                    <p class="font-bold mt-3">設定</p>
+                    <p class="text-xs mt-1" style="color:var(--text-muted-color)">プロフィール・管理</p>
+                </button>
+                <div class="card rounded-2xl p-5">
+                    <i class="fas fa-feather-pointed text-2xl" style="color:var(--accent-color)"></i>
+                    <p class="font-bold mt-3"><span id="home-stat-posts">0</span> 投稿</p>
+                    <p class="text-xs mt-1" style="color:var(--text-muted-color)"><span id="home-stat-blogs">0</span> 記事 / <span id="home-stat-users">0</span> 人</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交流（SNS） -->
+        <section id="view-koryu" class="view hidden space-y-4">
+            <div class="card rounded-2xl p-4">
+                <textarea id="post-input" rows="3" maxlength="1000" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="いま考えていること、執筆の進捗など…"></textarea>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-xs" style="color:var(--text-muted-color)"><i class="fas fa-users mr-1"></i>登録メンバーに公開されます</span>
+                    <button id="post-submit" class="btn-accent px-4 py-1.5 rounded-md text-sm font-semibold">投稿</button>
+                </div>
+            </div>
+            <div id="feed-list" class="space-y-4"></div>
+        </section>
+
+        <!-- ブログ -->
+        <section id="view-blog" class="view hidden space-y-4">
+            <div id="blog-author-bar" class="hidden">
+                <button id="blog-new-btn" class="btn-accent w-full py-2.5 rounded-md font-semibold"><i class="fas fa-pen-nib mr-2"></i>新しい記事を書く</button>
+            </div>
+            <div id="blog-list" class="space-y-4"></div>
+        </section>
+
+        <!-- ブログ記事詳細 -->
+        <section id="view-blog-detail" class="view hidden space-y-4">
+            <button class="back-to-blog btn-ghost px-3 py-1.5 rounded-md text-sm"><i class="fas fa-arrow-left mr-1"></i>記事一覧</button>
+            <div id="blog-detail-content"></div>
+        </section>
+
+        <!-- ブログ編集 -->
+        <section id="view-blog-edit" class="view hidden space-y-4">
+            <button class="back-to-blog btn-ghost px-3 py-1.5 rounded-md text-sm"><i class="fas fa-arrow-left mr-1"></i>戻る</button>
+            <div class="card rounded-2xl p-5 space-y-4">
+                <h2 class="serif text-xl font-bold">記事を書く</h2>
+                <input type="text" id="blog-edit-title" maxlength="80" class="input-field w-full px-3 py-2 rounded-md" placeholder="タイトル">
+                <textarea id="blog-edit-body" rows="14" maxlength="20000" class="textarea-field w-full px-3 py-2 rounded-md serif resize-none" placeholder="本文（改行はそのまま反映されます）"></textarea>
+                <div class="flex justify-end gap-2">
+                    <button class="back-to-blog btn-ghost px-4 py-2 rounded-md text-sm">キャンセル</button>
+                    <button id="blog-publish-btn" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">公開する</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 設定 -->
+        <section id="view-settings" class="view hidden space-y-4">
+            <div class="card rounded-2xl p-5">
+                <h2 class="font-bold mb-4"><i class="fas fa-user-pen mr-2" style="color:var(--accent-color)"></i>プロフィール</h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs mb-1" style="color:var(--text-muted-color)">ペンネーム</label>
+                        <input type="text" id="set-penname" maxlength="24" class="input-field w-full px-3 py-2 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-xs mb-1" style="color:var(--text-muted-color)">自己紹介</label>
+                        <textarea id="set-bio" rows="3" maxlength="300" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="作風や、好きな作家など"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs mb-1" style="color:var(--text-muted-color)">メールアドレス</label>
+                        <input type="email" id="set-email" disabled class="input-field w-full px-3 py-2 rounded-md opacity-60">
+                    </div>
+                    <button id="set-save-btn" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">保存</button>
+                    <p id="set-saved-msg" class="text-xs text-emerald-400 hidden">保存しました。</p>
+                </div>
+            </div>
+
+            <!-- 管理人パネル -->
+            <div id="admin-panel" class="card rounded-2xl p-5 hidden">
+                <h2 class="font-bold mb-1"><i class="fas fa-crown mr-2 text-amber-400"></i>管理人メニュー</h2>
+                <p class="text-xs mb-4" style="color:var(--text-muted-color)">専門知識を持つ方を招待すると、ブログ記事を書けるようになります。</p>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs mb-1" style="color:var(--text-muted-color)">執筆者として招待（登録済みメンバーのメール）</label>
+                        <div class="flex gap-2">
+                            <input type="email" id="invite-email" class="input-field flex-1 px-3 py-2 rounded-md" placeholder="author@example.com">
+                            <button id="invite-btn" class="btn-accent px-4 rounded-md text-sm font-semibold whitespace-nowrap">招待</button>
+                        </div>
+                        <p id="invite-msg" class="text-xs mt-1 hidden"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs mb-2" style="color:var(--text-muted-color)">メンバー一覧</p>
+                        <div id="member-list" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- データ管理 -->
+            <div class="card rounded-2xl p-5">
+                <h2 class="font-bold mb-3"><i class="fas fa-database mr-2" style="color:var(--accent-color)"></i>データ</h2>
+                <p class="text-xs mb-3" style="color:var(--text-muted-color)">この端末のデータをバックアップ・復元できます。</p>
+                <div class="flex flex-wrap gap-2">
+                    <button id="export-btn" class="btn-ghost px-4 py-2 rounded-md text-sm"><i class="fas fa-download mr-1"></i>エクスポート</button>
+                    <label class="btn-ghost px-4 py-2 rounded-md text-sm cursor-pointer"><i class="fas fa-upload mr-1"></i>インポート<input type="file" id="import-input" accept="application/json" class="hidden"></label>
+                </div>
+            </div>
+
+            <button id="logout-btn" class="btn-danger w-full py-2.5 rounded-md font-semibold"><i class="fas fa-right-from-bracket mr-2"></i>ログアウト</button>
+        </section>
+    </main>
+
+    <!-- 下部ナビゲーション -->
+    <nav class="bottom-nav fixed bottom-0 left-0 right-0 z-20 border-t" style="background-color:var(--header-bg-color); border-color:var(--border-color)">
+        <div class="max-w-2xl mx-auto grid grid-cols-4">
+            <button class="nav-btn active flex flex-col items-center py-2.5 gap-0.5" data-view="home">
+                <i class="fas fa-house nav-icon text-lg"></i><span class="text-[11px]">ホーム</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-view="koryu">
+                <i class="fas fa-comments nav-icon text-lg"></i><span class="text-[11px]">交流</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-view="blog">
+                <i class="fas fa-book-open nav-icon text-lg"></i><span class="text-[11px]">ブログ</span>
+            </button>
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-view="settings">
+                <i class="fas fa-gear nav-icon text-lg"></i><span class="text-[11px]">設定</span>
+            </button>
+        </div>
+    </nav>
+</div>
+
+<!-- モーダル（記事公開の確認など、簡易トースト） -->
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-sm font-semibold text-white hidden" style="background-color:var(--accent-color)"></div>
+
+<script>
+/* =========================================================
+   筆灯 (Fudebi) — 小説家の交流サイト 試作版
+   データは localStorage に保存（この端末のみ）。
+   ※試作のためパスワードは簡易ハッシュです。本番運用時は
+     クラウド/サーバー側の認証に置き換えてください。
+   ========================================================= */
+(function () {
+    'use strict';
+
+    const KEYS = { users:'fudebi_users', session:'fudebi_session', posts:'fudebi_posts', blogs:'fudebi_blogs', theme:'fudebi_theme' };
+
+    // ---------- ストレージ ----------
+    const load = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } };
+    const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+    let users   = load(KEYS.users, []);
+    let posts   = load(KEYS.posts, []);
+    let blogs   = load(KEYS.blogs, []);
+    let session = load(KEYS.session, null);
+
+    const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.session, session); };
+
+    // ---------- ユーティリティ ----------
+    const $  = (s, el=document) => el.querySelector(s);
+    const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const esc = (s='') => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const me = () => users.find(u => u.id === session) || null;
+
+    // 簡易ハッシュ（試作用。暗号学的な安全性はありません）
+    function hash(str) {
+        let h = 5381;
+        for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+        return h.toString(16);
+    }
+
+    const COLORS = ['#a78bfa','#f59e0b','#34d399','#60a5fa','#f472b6','#fb7185','#38bdf8','#c084fc'];
+    const colorFor = id => COLORS[[...id].reduce((a,c)=>a+c.charCodeAt(0),0) % COLORS.length];
+    const initial = name => (name||'？').trim().charAt(0).toUpperCase();
+
+    function timeAgo(ts) {
+        const d = (Date.now() - ts) / 1000;
+        if (d < 60) return 'たった今';
+        if (d < 3600) return Math.floor(d/60) + '分前';
+        if (d < 86400) return Math.floor(d/3600) + '時間前';
+        if (d < 604800) return Math.floor(d/86400) + '日前';
+        return new Date(ts).toLocaleDateString('ja-JP');
+    }
+    const fmtDate = ts => new Date(ts).toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' });
+
+    function avatar(user, size='w-9 h-9 text-sm') {
+        if (!user) return `<div class="avatar ${size} rounded-full" style="background:#888">？</div>`;
+        return `<div class="avatar ${size} rounded-full" style="background:${colorFor(user.id)}">${esc(initial(user.penname))}</div>`;
+    }
+    function roleBadge(role) {
+        if (role === 'admin')  return '<span class="badge badge-admin">管理人</span>';
+        if (role === 'author') return '<span class="badge badge-author">執筆者</span>';
+        return '';
+    }
+    const canWriteBlog = u => u && (u.role === 'admin' || u.role === 'author');
+
+    let toastTimer;
+    function toast(msg) {
+        const t = $('#toast');
+        t.textContent = msg; t.classList.remove('hidden');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.add('hidden'), 2200);
+    }
+
+    // ---------- テーマ ----------
+    function applyTheme(theme) {
+        document.documentElement.classList.toggle('light', theme === 'light');
+        document.documentElement.classList.toggle('dark', theme !== 'light');
+        const icon = $('#theme-toggle i');
+        if (icon) icon.className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+        save(KEYS.theme, theme);
+    }
+    applyTheme(load(KEYS.theme, 'dark'));
+
+    // ====================================================
+    //  認証
+    // ====================================================
+    function showAuth() { $('#auth-screen').classList.remove('hidden'); $('#app-screen').classList.add('hidden'); }
+    function showApp()  { $('#auth-screen').classList.add('hidden');    $('#app-screen').classList.remove('hidden'); renderAll(); switchView('home'); }
+
+    // タブ切替
+    $('#tab-login').addEventListener('click', () => {
+        $('#login-form').classList.remove('hidden'); $('#register-form').classList.add('hidden');
+        $('#tab-login').className = 'flex-1 py-2 text-sm font-semibold btn-accent';
+        $('#tab-register').className = 'flex-1 py-2 text-sm font-semibold btn-ghost border-0';
+    });
+    $('#tab-register').addEventListener('click', () => {
+        $('#register-form').classList.remove('hidden'); $('#login-form').classList.add('hidden');
+        $('#tab-register').className = 'flex-1 py-2 text-sm font-semibold btn-accent';
+        $('#tab-login').className = 'flex-1 py-2 text-sm font-semibold btn-ghost border-0';
+    });
+
+    // 登録
+    $('#register-form').addEventListener('submit', e => {
+        e.preventDefault();
+        const penname = $('#reg-penname').value.trim();
+        const email   = $('#reg-email').value.trim().toLowerCase();
+        const pw      = $('#reg-password').value;
+        const err     = $('#reg-error');
+        err.classList.add('hidden');
+
+        if (!penname || !email || pw.length < 6) { err.textContent = '入力内容を確認してください。'; err.classList.remove('hidden'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = '正しいメールアドレスを入力してください。'; err.classList.remove('hidden'); return; }
+        if (users.some(u => u.email === email)) { err.textContent = 'このメールアドレスは既に登録されています。'; err.classList.remove('hidden'); return; }
+
+        const isFirst = users.length === 0; // 最初の登録者は管理人
+        const user = { id: uid(), penname, email, pw: hash(pw), role: isFirst ? 'admin' : 'member', bio: '', createdAt: Date.now() };
+        users.push(user); session = user.id; persist();
+        e.target.reset();
+        showApp();
+        toast(isFirst ? '管理人として登録しました' : 'ようこそ、筆灯へ');
+    });
+
+    // ログイン
+    $('#login-form').addEventListener('submit', e => {
+        e.preventDefault();
+        const email = $('#login-email').value.trim().toLowerCase();
+        const pw    = $('#login-password').value;
+        const err   = $('#login-error');
+        err.classList.add('hidden');
+        const user = users.find(u => u.email === email);
+        if (!user || user.pw !== hash(pw)) { err.textContent = 'メールアドレスまたはパスワードが違います。'; err.classList.remove('hidden'); return; }
+        session = user.id; persist(); e.target.reset(); showApp();
+        toast('おかえりなさい');
+    });
+
+    // ログアウト
+    $('#logout-btn').addEventListener('click', () => {
+        if (!confirm('ログアウトしますか？')) return;
+        session = null; persist(); showAuth();
+    });
+
+    // ====================================================
+    //  画面切替
+    // ====================================================
+    function switchView(view) {
+        $$('.view').forEach(v => v.classList.add('hidden'));
+        const el = $('#view-' + view);
+        if (el) { el.classList.remove('hidden'); el.classList.add('fade-in'); }
+        $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+        window.scrollTo({ top: 0 });
+    }
+    $$('.nav-btn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+    $$('.home-nav').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+    $('#theme-toggle').addEventListener('click', () => applyTheme(document.documentElement.classList.contains('light') ? 'dark' : 'light'));
+
+    // ====================================================
+    //  描画
+    // ====================================================
+    function renderAll() { renderHeader(); renderHome(); renderFeed(); renderBlogList(); renderSettings(); }
+
+    function renderHeader() {
+        $('#header-avatar').outerHTML = avatar(me()).replace('class="avatar', 'id="header-avatar" class="avatar');
+        // outerHTML 置換後は参照が変わるためイベントは付け直し
+        $('#header-avatar').addEventListener('click', () => switchView('settings'));
+    }
+
+    function renderHome() {
+        const u = me(); if (!u) return;
+        $('#home-greeting').textContent = u.penname + ' さん';
+        $('#home-stat-posts').textContent = posts.length;
+        $('#home-stat-blogs').textContent = blogs.length;
+        $('#home-stat-users').textContent = users.length;
+    }
+
+    // ---------- 交流（SNS） ----------
+    $('#post-submit').addEventListener('click', () => {
+        const ta = $('#post-input');
+        const body = ta.value.trim();
+        if (!body) return;
+        posts.unshift({ id: uid(), authorId: session, body, createdAt: Date.now(), likes: [], comments: [] });
+        ta.value = ''; persist(); renderFeed(); renderHome();
+        toast('投稿しました');
+    });
+
+    function renderFeed() {
+        const list = $('#feed-list');
+        if (!posts.length) { list.innerHTML = emptyState('fa-comments', 'まだ投稿がありません', '最初のひとことを投稿してみましょう。'); return; }
+        list.innerHTML = posts.map(p => {
+            const a = users.find(u => u.id === p.authorId);
+            const liked = p.likes.includes(session);
+            const comments = (p.comments || []).map(c => {
+                const ca = users.find(u => u.id === c.authorId);
+                return `<div class="flex gap-2 mt-2">
+                    ${avatar(ca,'w-7 h-7 text-xs')}
+                    <div class="flex-1 rounded-lg px-3 py-2" style="background:var(--bg-color)">
+                        <div class="flex items-center gap-2"><span class="text-xs font-semibold">${esc(ca?ca.penname:'退会者')}</span>${roleBadge(ca?.role)}<span class="text-[10px]" style="color:var(--text-muted-color)">${timeAgo(c.createdAt)}</span></div>
+                        <p class="text-sm mt-0.5 whitespace-pre-wrap">${esc(c.body)}</p>
+                    </div></div>`;
+            }).join('');
+            return `<div class="card rounded-2xl p-4 fade-in">
+                <div class="flex gap-3">
+                    ${avatar(a)}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-semibold">${esc(a?a.penname:'退会者')}</span>${roleBadge(a?.role)}
+                            <span class="text-xs" style="color:var(--text-muted-color)">${timeAgo(p.createdAt)}</span>
+                            ${p.authorId===session?`<button class="del-post ml-auto text-xs" style="color:var(--text-muted-color)" data-id="${p.id}"><i class="fas fa-trash"></i></button>`:''}
+                        </div>
+                        <p class="mt-1 whitespace-pre-wrap break-words">${esc(p.body)}</p>
+                        <div class="flex items-center gap-4 mt-3 text-sm" style="color:var(--text-muted-color)">
+                            <button class="like-btn flex items-center gap-1 ${liked?'':''}" data-id="${p.id}" style="${liked?'color:var(--accent-color)':''}">
+                                <i class="fa${liked?'s':'r'} fa-heart"></i><span>${p.likes.length||''}</span>
+                            </button>
+                            <button class="toggle-comment flex items-center gap-1" data-id="${p.id}"><i class="far fa-comment"></i><span>${(p.comments||[]).length||''}</span></button>
+                        </div>
+                        <div class="comments mt-2 hidden" data-id="${p.id}">
+                            ${comments}
+                            <div class="flex gap-2 mt-3">
+                                <input type="text" class="comment-input input-field flex-1 px-3 py-1.5 rounded-md text-sm" data-id="${p.id}" placeholder="コメントを書く…" maxlength="500">
+                                <button class="comment-send btn-accent px-3 rounded-md text-sm" data-id="${p.id}">送信</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // いいね
+        $$('.like-btn', list).forEach(b => b.addEventListener('click', () => {
+            const p = posts.find(x => x.id === b.dataset.id);
+            const i = p.likes.indexOf(session);
+            if (i >= 0) p.likes.splice(i,1); else p.likes.push(session);
+            persist(); renderFeed();
+        }));
+        // コメント開閉
+        $$('.toggle-comment', list).forEach(b => b.addEventListener('click', () => {
+            $(`.comments[data-id="${b.dataset.id}"]`, list).classList.toggle('hidden');
+        }));
+        // コメント送信
+        $$('.comment-send', list).forEach(b => b.addEventListener('click', () => {
+            const input = $(`.comment-input[data-id="${b.dataset.id}"]`, list);
+            const body = input.value.trim(); if (!body) return;
+            const p = posts.find(x => x.id === b.dataset.id);
+            (p.comments = p.comments || []).push({ id: uid(), authorId: session, body, createdAt: Date.now() });
+            persist(); renderFeed();
+            $(`.comments[data-id="${b.dataset.id}"]`, $('#feed-list')).classList.remove('hidden');
+        }));
+        // 投稿削除
+        $$('.del-post', list).forEach(b => b.addEventListener('click', () => {
+            if (!confirm('この投稿を削除しますか？')) return;
+            posts = posts.filter(x => x.id !== b.dataset.id);
+            persist(); renderFeed(); renderHome();
+        }));
+    }
+
+    // ---------- ブログ ----------
+    function renderBlogList() {
+        $('#blog-author-bar').classList.toggle('hidden', !canWriteBlog(me()));
+        const list = $('#blog-list');
+        if (!blogs.length) {
+            list.innerHTML = emptyState('fa-book-open', 'まだ記事がありません',
+                canWriteBlog(me()) ? '「新しい記事を書く」から投稿できます。' : '管理人・執筆者の記事がここに並びます。');
+            return;
+        }
+        list.innerHTML = blogs.map(b => {
+            const a = users.find(u => u.id === b.authorId);
+            const preview = b.body.replace(/\s+/g, ' ').slice(0, 90);
+            return `<button class="open-blog card rounded-2xl p-5 w-full text-left hover:border-accent transition fade-in" data-id="${b.id}">
+                <h3 class="serif text-lg font-bold leading-snug">${esc(b.title)}</h3>
+                <p class="text-sm mt-2 line-clamp-2" style="color:var(--text-muted-color)">${esc(preview)}${b.body.length>90?'…':''}</p>
+                <div class="flex items-center gap-2 mt-3">
+                    ${avatar(a,'w-6 h-6 text-xs')}
+                    <span class="text-xs font-semibold">${esc(a?a.penname:'退会者')}</span>${roleBadge(a?.role)}
+                    <span class="text-xs" style="color:var(--text-muted-color)">${fmtDate(b.createdAt)}</span>
+                    <span class="text-xs ml-auto" style="color:var(--text-muted-color)"><i class="far fa-comment mr-1"></i>${(b.comments||[]).length}</span>
+                </div>
+            </button>`;
+        }).join('');
+        $$('.open-blog', list).forEach(b => b.addEventListener('click', () => openBlog(b.dataset.id)));
+    }
+
+    function openBlog(id) {
+        const b = blogs.find(x => x.id === id); if (!b) return;
+        const a = users.find(u => u.id === b.authorId);
+        const u = me();
+        const canDelete = u && (u.id === b.authorId || u.role === 'admin');
+        const comments = (b.comments||[]).map(c => {
+            const ca = users.find(x => x.id === c.authorId);
+            return `<div class="flex gap-2 mt-3">
+                ${avatar(ca,'w-7 h-7 text-xs')}
+                <div class="flex-1 rounded-lg px-3 py-2" style="background:var(--bg-color)">
+                    <div class="flex items-center gap-2"><span class="text-xs font-semibold">${esc(ca?ca.penname:'退会者')}</span>${roleBadge(ca?.role)}<span class="text-[10px]" style="color:var(--text-muted-color)">${timeAgo(c.createdAt)}</span></div>
+                    <p class="text-sm mt-0.5 whitespace-pre-wrap">${esc(c.body)}</p>
+                </div></div>`;
+        }).join('');
+
+        $('#blog-detail-content').innerHTML = `
+            <article class="card rounded-2xl p-6">
+                <h1 class="serif text-2xl font-bold leading-snug">${esc(b.title)}</h1>
+                <div class="flex items-center gap-2 mt-3 mb-5 pb-5 border-b" style="border-color:var(--border-color)">
+                    ${avatar(a,'w-8 h-8 text-sm')}
+                    <div><div class="flex items-center gap-2"><span class="text-sm font-semibold">${esc(a?a.penname:'退会者')}</span>${roleBadge(a?.role)}</div>
+                    <span class="text-xs" style="color:var(--text-muted-color)">${fmtDate(b.createdAt)}</span></div>
+                    ${canDelete?`<button id="del-blog" class="ml-auto btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-trash mr-1"></i>削除</button>`:''}
+                </div>
+                <div class="blog-body serif">${esc(b.body)}</div>
+            </article>
+            <div class="card rounded-2xl p-5">
+                <h3 class="font-bold mb-2"><i class="far fa-comment mr-2" style="color:var(--accent-color)"></i>コメント（${(b.comments||[]).length}）</h3>
+                <div id="blog-comments">${comments || `<p class="text-sm" style="color:var(--text-muted-color)">最初のコメントを書いてみましょう。</p>`}</div>
+                <div class="flex gap-2 mt-4">
+                    <input type="text" id="blog-comment-input" class="input-field flex-1 px-3 py-2 rounded-md text-sm" placeholder="コメントを書く…" maxlength="500">
+                    <button id="blog-comment-send" class="btn-accent px-4 rounded-md text-sm font-semibold">送信</button>
+                </div>
+            </div>`;
+
+        const del = $('#del-blog');
+        if (del) del.addEventListener('click', () => {
+            if (!confirm('この記事を削除しますか？')) return;
+            blogs = blogs.filter(x => x.id !== id); persist(); renderBlogList(); renderHome(); switchView('blog');
+        });
+        $('#blog-comment-send').addEventListener('click', () => {
+            const input = $('#blog-comment-input');
+            const body = input.value.trim(); if (!body) return;
+            (b.comments = b.comments || []).push({ id: uid(), authorId: session, body, createdAt: Date.now() });
+            persist(); openBlog(id); renderBlogList();
+        });
+        switchView('blog-detail');
+    }
+
+    $('#blog-new-btn').addEventListener('click', () => {
+        $('#blog-edit-title').value = ''; $('#blog-edit-body').value = '';
+        switchView('blog-edit');
+    });
+    $('#blog-publish-btn').addEventListener('click', () => {
+        const title = $('#blog-edit-title').value.trim();
+        const body  = $('#blog-edit-body').value.trim();
+        if (!title || !body) { toast('タイトルと本文を入力してください'); return; }
+        if (!canWriteBlog(me())) { toast('権限がありません'); return; }
+        blogs.unshift({ id: uid(), authorId: session, title, body, createdAt: Date.now(), comments: [] });
+        persist(); renderBlogList(); renderHome(); switchView('blog');
+        toast('記事を公開しました');
+    });
+    $$('.back-to-blog').forEach(b => b.addEventListener('click', () => switchView('blog')));
+
+    // ---------- 設定 ----------
+    function renderSettings() {
+        const u = me(); if (!u) return;
+        $('#set-penname').value = u.penname;
+        $('#set-bio').value = u.bio || '';
+        $('#set-email').value = u.email;
+        // 管理人パネル
+        const isAdmin = u.role === 'admin';
+        $('#admin-panel').classList.toggle('hidden', !isAdmin);
+        if (isAdmin) renderMemberList();
+    }
+
+    $('#set-save-btn').addEventListener('click', () => {
+        const u = me(); if (!u) return;
+        const pn = $('#set-penname').value.trim();
+        if (!pn) { toast('ペンネームを入力してください'); return; }
+        u.penname = pn; u.bio = $('#set-bio').value.trim();
+        persist(); renderAll();
+        const msg = $('#set-saved-msg'); msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 1800);
+    });
+
+    function renderMemberList() {
+        const u = me();
+        $('#member-list').innerHTML = users.map(m => `
+            <div class="flex items-center gap-2 rounded-lg px-3 py-2" style="background:var(--bg-color)">
+                ${avatar(m,'w-7 h-7 text-xs')}
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2"><span class="text-sm font-semibold truncate">${esc(m.penname)}</span>${roleBadge(m.role)}</div>
+                    <span class="text-[11px] truncate block" style="color:var(--text-muted-color)">${esc(m.email)}</span>
+                </div>
+                ${m.id !== u.id && m.role !== 'admin' ? (
+                    m.role === 'author'
+                    ? `<button class="role-btn btn-ghost text-xs px-2 py-1 rounded" data-id="${m.id}" data-role="member">執筆権限を外す</button>`
+                    : `<button class="role-btn btn-accent text-xs px-2 py-1 rounded" data-id="${m.id}" data-role="author">執筆者にする</button>`
+                ) : ''}
+            </div>`).join('');
+        $$('.role-btn', $('#member-list')).forEach(b => b.addEventListener('click', () => {
+            const m = users.find(x => x.id === b.dataset.id);
+            m.role = b.dataset.role; persist(); renderMemberList(); renderFeed(); renderBlogList();
+            toast(b.dataset.role === 'author' ? '執筆者に設定しました' : '執筆権限を外しました');
+        }));
+    }
+
+    $('#invite-btn').addEventListener('click', () => {
+        const email = $('#invite-email').value.trim().toLowerCase();
+        const msg = $('#invite-msg'); msg.classList.remove('hidden');
+        const target = users.find(u => u.email === email);
+        if (!target) { msg.className = 'text-xs mt-1 text-rose-400'; msg.textContent = 'そのメールの登録メンバーが見つかりません（先に本人の登録が必要です）。'; return; }
+        if (target.role === 'admin') { msg.className = 'text-xs mt-1 text-rose-400'; msg.textContent = 'その方は管理人です。'; return; }
+        target.role = 'author'; persist(); renderMemberList(); renderFeed(); renderBlogList();
+        msg.className = 'text-xs mt-1 text-emerald-400'; msg.textContent = `${target.penname} さんを執筆者に招待しました。`;
+        $('#invite-email').value = '';
+    });
+
+    // ---------- データ入出力 ----------
+    $('#export-btn').addEventListener('click', () => {
+        const data = { users, posts, blogs, exportedAt: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `fudebi-backup-${new Date().toISOString().slice(0,10)}.json`;
+        a.click(); URL.revokeObjectURL(a.href);
+    });
+    $('#import-input').addEventListener('change', e => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const d = JSON.parse(reader.result);
+                if (!Array.isArray(d.users)) throw new Error('形式が不正です');
+                if (!confirm('現在のデータを上書きしてインポートします。よろしいですか？')) return;
+                users = d.users; posts = d.posts || []; blogs = d.blogs || [];
+                if (!users.some(u => u.id === session)) session = null;
+                persist();
+                if (session) { renderAll(); switchView('home'); } else { showAuth(); }
+                toast('インポートしました');
+            } catch (err) { alert('読み込みに失敗しました：' + err.message); }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    // ---------- 共通 ----------
+    function emptyState(icon, title, sub) {
+        return `<div class="card rounded-2xl p-10 text-center">
+            <i class="fas ${icon} text-3xl mb-3" style="color:var(--text-muted-color)"></i>
+            <p class="font-semibold">${title}</p>
+            <p class="text-sm mt-1" style="color:var(--text-muted-color)">${sub}</p>
+        </div>`;
+    }
+
+    // ---------- 起動 ----------
+    if (session && me()) showApp(); else showAuth();
+})();
+</script>
+</body>
+</html>
