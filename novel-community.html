@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" class="dark">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -8,31 +8,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* レトロな書庫・文豪の趣を漂わせるアースカラー（単一テーマ） */
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg-color: #2c2c2c;
-            --border-color: #444444;
-            --text-color: #e0e0e0;
-            --text-muted-color: #a0a0a0;
-            --accent-color: #a78bfa;
-            --accent-hover-color: #8b5cf6;
-            --accent-soft-color: rgba(167,139,250,0.12);
-            --danger-color: #f43f5e;
-            --danger-hover-color: #e11d48;
-            --header-bg-color: #212121;
+            --bg-color: #ece1c9;        /* 白よりのベージュ（やや古紙の色） */
+            --card-bg-color: #f6efdc;   /* 生成りの紙色 */
+            --border-color: #cdbb98;    /* くすんだ亜麻色 */
+            --text-color: #4a3526;      /* 濃い茶（インク） */
+            --text-muted-color: #8a7458;/* セピア */
+            --accent-color: #8a5a36;    /* テラコッタ／革表紙の茶 */
+            --accent-hover-color: #6f4527;
+            --accent-soft-color: rgba(138,90,54,0.12);
+            --danger-color: #a8472f;    /* 朱／弁柄色 */
+            --danger-hover-color: #8a3824;
+            --header-bg-color: #e3d6b8; /* 書棚の木肌 */
         }
-        html.light {
-            --bg-color: #f5f3ef;
-            --card-bg-color: #ffffff;
-            --border-color: #e2ddd3;
-            --text-color: #2a2622;
-            --text-muted-color: #8a8175;
-            --accent-color: #7c3aed;
-            --accent-hover-color: #6d28d9;
-            --accent-soft-color: rgba(124,58,237,0.10);
-            --header-bg-color: #ffffff;
-        }
-        body { font-family: 'Inter','Noto Sans JP',sans-serif; background-color: var(--bg-color); color: var(--text-color); transition: background-color .3s, color .3s; }
+        body { font-family: 'Inter','Noto Sans JP',sans-serif; background-color: var(--bg-color); color: var(--text-color); }
         .serif { font-family: 'Noto Serif JP', serif; }
         .card { background-color: var(--card-bg-color); border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.08); transition: background-color .3s, border-color .3s; }
         .btn-accent { background-color: var(--accent-color); color:#fff; transition: background-color .2s, transform .1s; box-shadow: 0 2px 4px rgba(0,0,0,.15); }
@@ -54,8 +44,12 @@
         @keyframes fadeIn { from {opacity:0; transform: translateY(8px);} to {opacity:1; transform: translateY(0);} }
         .fade-in { animation: fadeIn .35s ease-out forwards; }
         .badge { font-size:.65rem; padding:.1rem .45rem; border-radius:9999px; font-weight:600; }
-        .badge-admin { background:#f59e0b; color:#1a1a1a; }
+        .badge-admin { background:#b58a2e; color:#fff; }
         .badge-author { background: var(--accent-color); color:#fff; }
+        /* Tailwindの原色をアースカラーへ寄せる */
+        .text-rose-400 { color: var(--danger-color) !important; }
+        .text-amber-400 { color: #b58a2e !important; }
+        .text-emerald-400 { color: #5c7a3f !important; }
         .avatar { display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; flex-shrink:0; }
         .blog-body { white-space: pre-wrap; line-height: 1.9; }
         .chip { border:1px solid var(--border-color); color:var(--text-muted-color); border-radius:9999px; padding:.25rem .7rem; font-size:.78rem; cursor:pointer; transition: all .15s; user-select:none; }
@@ -63,7 +57,7 @@
         .menu-row { display:flex; align-items:center; gap:.9rem; padding:.95rem 1rem; cursor:pointer; transition: background-color .15s; }
         .menu-row:hover { background: var(--accent-soft-color); }
         .menu-row + .menu-row { border-top: 1px solid var(--border-color); }
-        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 4.5rem); }
+        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 7rem); }
         .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
         a.exlink { color: var(--accent-color); }
     </style>
@@ -100,7 +94,6 @@
                     <input type="password" id="reg-password" required minlength="6" class="input-field w-full px-3 py-2 rounded-md" placeholder="••••••••"></div>
                 <p id="reg-error" class="text-xs text-rose-400 hidden"></p>
                 <button type="submit" class="btn-accent w-full py-2.5 rounded-md font-semibold">登録してはじめる</button>
-                <p class="text-xs text-center" style="color:var(--text-muted-color)">最初に登録した方が管理人になります。</p>
             </form>
         </div>
         <p class="text-[11px] text-center mt-4 leading-relaxed" style="color:var(--text-muted-color)">
@@ -113,14 +106,13 @@
 <div id="app-screen" class="hidden">
     <header class="sticky top-0 z-20 border-b" style="background-color:var(--header-bg-color); border-color:var(--border-color)">
         <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-            <h1 class="serif text-xl font-bold tracking-wider" style="color:var(--accent-color)">筆灯</h1>
+            <h1 data-action="nav" data-view="home" class="serif text-xl font-bold tracking-wider cursor-pointer select-none" style="color:var(--accent-color)" title="ホームへ"><i class="fas fa-book-bookmark mr-1 text-base"></i>筆灯</h1>
             <div class="flex items-center gap-2">
                 <button data-action="bell" class="relative w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="通知">
                     <i class="fas fa-bell"></i>
                     <span id="bell-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style="background:var(--danger-color)"></span>
                 </button>
-                <button data-action="theme" class="w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="テーマ切替"><i class="fas fa-moon"></i></button>
-                <div id="header-avatar"></div>
+                <div id="header-avatar" title="設定"></div>
             </div>
         </div>
     </header>
@@ -185,7 +177,7 @@
         <section id="view-settings" class="view hidden space-y-4">
             <div class="card rounded-2xl overflow-hidden" id="settings-menu"></div>
             <button data-action="logout" class="btn-danger w-full py-2.5 rounded-md font-semibold"><i class="fas fa-right-from-bracket mr-2"></i>ログアウト</button>
-            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆灯 試作版 v0.2 ／ データはこの端末内に保存されます</p>
+            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆灯 試作版 v0.3 ／ データはこの端末内に保存されます</p>
         </section>
     </main>
 
@@ -203,14 +195,14 @@
 
 <script>
 /* =========================================================
-   筆灯 (Fudebi) — 小説家の交流サイト 試作版 v0.2
+   筆灯 (Fudebi) — 小説家の交流サイト 試作版 v0.3
    データは localStorage に保存（この端末のみ）。
    ※試作のためパスワードは簡易ハッシュです。本番運用時は
      クラウド/サーバー側の認証に置き換えてください。
    ========================================================= */
 (function () {
     'use strict';
-    const KEYS = { users:'fudebi_users', session:'fudebi_session', posts:'fudebi_posts', blogs:'fudebi_blogs', notifs:'fudebi_notifs', reports:'fudebi_reports', theme:'fudebi_theme' };
+    const KEYS = { users:'fudebi_users', session:'fudebi_session', posts:'fudebi_posts', blogs:'fudebi_blogs', notifs:'fudebi_notifs', reports:'fudebi_reports', feedbacks:'fudebi_feedbacks', banned:'fudebi_banned' };
     const GENRES = ['恋愛','ファンタジー','SF','ミステリ','ホラー','時代・歴史','現代ドラマ','エッセイ','詩・短歌','ライト文芸','二次創作','BL','GL','ノンフィクション'];
     const LINK_PRESETS = ['カクヨム','小説家になろう','pixiv','X (Twitter)','note','個人サイト'];
 
@@ -220,9 +212,11 @@
     let users   = load(KEYS.users, []);
     let posts   = load(KEYS.posts, []);
     let blogs   = load(KEYS.blogs, []);
-    let notifs  = load(KEYS.notifs, []);
-    let reports = load(KEYS.reports, []);
-    let session = load(KEYS.session, null);
+    let notifs    = load(KEYS.notifs, []);
+    let reports   = load(KEYS.reports, []);
+    let feedbacks = load(KEYS.feedbacks, []);
+    let banned    = load(KEYS.banned, []);   // BANされたメールアドレス一覧
+    let session   = load(KEYS.session, null);
 
     // 旧データの補完
     users.forEach(u => {
@@ -231,7 +225,7 @@
         u.muteWords = u.muteWords || []; if (u.blogComments === undefined) u.blogComments = true;
     });
 
-    const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.session, session); };
+    const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.session, session); };
 
     const $  = (s, el=document) => el.querySelector(s);
     const $$ = (s, el=document) => [...el.querySelectorAll(s)];
@@ -259,7 +253,7 @@
         const cl = clickable ? `data-action="open-profile" data-id="${user.id}" class="font-semibold cursor-pointer hover:underline"` : `class="font-semibold"`;
         return `<span ${cl}>${esc(user.penname)}</span>${roleBadge(user.role)}`;
     }
-    function roleBadge(role){ if(role==='admin')return ' <span class="badge badge-admin">管理人</span>'; if(role==='author')return ' <span class="badge badge-author">執筆者</span>'; return ''; }
+    function roleBadge(role){ if(role==='admin')return ' <span class="badge badge-admin">管理人</span>'; if(role==='author')return ' <span class="badge badge-author">ブロガー</span>'; return ''; }
     const canWriteBlog = u => u && (u.role==='admin'||u.role==='author');
 
     // ブロック・ミュート
@@ -268,9 +262,6 @@
 
     let toastTimer;
     function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.add('hidden'),2400); }
-
-    function applyTheme(theme){ const light=theme==='light'; document.documentElement.classList.toggle('light',light); document.documentElement.classList.toggle('dark',!light); const i=$('[data-action="theme"] i'); if(i)i.className=light?'fas fa-sun':'fas fa-moon'; save(KEYS.theme,theme); }
-    applyTheme(load(KEYS.theme,'dark'));
 
     // ================= 通知 =================
     function addNotif(toId, type, fromId, refId){ if(toId===fromId) return; notifs.push({id:uid(),toId,type,fromId,refId,createdAt:Date.now(),read:false}); }
@@ -303,6 +294,7 @@
         err.classList.add('hidden');
         if(!penname||!email||pw.length<6){ err.textContent='入力内容を確認してください。'; err.classList.remove('hidden'); return; }
         if(!validEmail(email)){ err.textContent='正しいメールアドレスを入力してください。'; err.classList.remove('hidden'); return; }
+        if(banned.includes(email)){ err.textContent='このメールアドレスはご利用いただけません。'; err.classList.remove('hidden'); return; }
         if(users.some(u=>u.email===email)){ err.textContent='このメールアドレスは既に登録されています。'; err.classList.remove('hidden'); return; }
         const isFirst=users.length===0;
         users.push({ id:uid(), penname, email, pw:hash(pw), role:isFirst?'admin':'member', bio:'', genres:[], links:[], following:[], followers:[], blocked:[], muteWords:[], blogComments:true, createdAt:Date.now() });
@@ -313,13 +305,14 @@
         e.preventDefault();
         const email=$('#login-email').value.trim().toLowerCase(), pw=$('#login-password').value, err=$('#login-error');
         err.classList.add('hidden');
+        if(banned.includes(email)){ err.textContent='このメールアドレスはご利用いただけません。'; err.classList.remove('hidden'); return; }
         const u=users.find(x=>x.email===email);
         if(!u||u.pw!==hash(pw)){ err.textContent='メールアドレスまたはパスワードが違います。'; err.classList.remove('hidden'); return; }
         session=u.id; persist(); e.target.reset(); showApp(); toast('おかえりなさい');
     });
 
     // ================= ヘッダー / ホーム =================
-    function renderHeader(){ $('#header-avatar').innerHTML = avatar(me(),'w-9 h-9 text-sm',true); }
+    function renderHeader(){ $('#header-avatar').innerHTML = `<div data-action="nav" data-view="settings" style="cursor:pointer" title="設定">${avatar(me(),'w-9 h-9 text-sm',false)}</div>`; }
     function renderHome(){ const u=me(); if(!u)return; $('#home-greeting').textContent=u.penname+' さん'; $('#home-stat-posts').textContent=posts.length; $('#home-stat-blogs').textContent=blogs.length; $('#home-stat-users').textContent=users.length; }
 
     // ================= 交流（SNS） =================
@@ -367,7 +360,7 @@
     function renderBlog(){
         $('#blog-author-bar').classList.toggle('hidden', !canWriteBlog(me()));
         const list=$('#blog-list');
-        if(!blogs.length){ list.innerHTML=emptyState('fa-book-open','まだ記事がありません', canWriteBlog(me())?'「新しい記事を書く」から投稿できます。':'管理人・執筆者の記事がここに並びます。'); return; }
+        if(!blogs.length){ list.innerHTML=emptyState('fa-book-open','まだ記事がありません', canWriteBlog(me())?'「新しい記事を書く」から投稿できます。':'管理人・ブロガーの記事がここに並びます。'); return; }
         list.innerHTML=blogs.map(b=>{ const a=userById(b.authorId); const prev=b.body.replace(/\s+/g,' ').slice(0,90);
             return `<button data-action="open-blog" data-id="${b.id}" class="card rounded-2xl p-5 w-full text-left transition fade-in">
                 <h3 class="serif text-lg font-bold leading-snug">${esc(b.title)}</h3>
@@ -475,11 +468,10 @@
             {p:'security', i:'fa-shield-halved',  t:'セキュリティ設定', d:'パスワード変更・退会'},
             {p:'interaction', i:'fa-comments',    t:'交流設定',         d:'ブロック・ミュートワード'},
             {p:'blog',     i:'fa-book',           t:'ブログ設定',       d:'自分の記事・コメント受付'},
-            {p:'appearance', i:'fa-palette',      t:'表示設定',         d:'テーマ（ダーク／ライト）'},
             {p:'data',     i:'fa-database',       t:'データ',           d:'バックアップ・復元'},
             {p:'other',    i:'fa-circle-info',    t:'その他',           d:'規約・お問い合わせ・バージョン'},
         ];
-        if(me() && me().role==='admin') items.splice(5,0,{p:'admin', i:'fa-crown', t:'管理人メニュー', d:'執筆者招待・メンバー管理・通報'});
+        if(me() && me().role==='admin') items.splice(5,0,{p:'admin', i:'fa-crown', t:'管理人メニュー', d:'ユーザー管理・ユーザーからの声・通報'});
         return items;
     }
     function renderSettings(){
@@ -511,7 +503,7 @@
                     <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">ペンネーム</label><input type="text" id="pf-penname" maxlength="24" class="input-field w-full px-3 py-2 rounded-md" value="${esc(u.penname)}"></div>
                     <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">自己紹介</label><textarea id="pf-bio" rows="3" maxlength="300" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="作風や、好きな作家など">${esc(u.bio)}</textarea></div>
                     <div><label class="block text-xs mb-2" style="color:var(--text-muted-color)">好きなジャンル（複数選択可）</label><div id="pf-genres" class="flex flex-wrap gap-2">${GENRES.map(g=>`<span class="chip ${u.genres.includes(g)?'on':''}" data-genre="${esc(g)}">${esc(g)}</span>`).join('')}</div></div>
-                    <div><label class="block text-xs mb-2" style="color:var(--text-muted-color)">URL（カクヨム・なろう・X など、自分を売り込むリンク）</label><div id="pf-links" class="space-y-2"></div>
+                    <div><label class="block text-xs mb-2" style="color:var(--text-muted-color)">URL置き場</label><div id="pf-links" class="space-y-2"></div>
                         <button data-action="add-link" class="btn-ghost px-3 py-1.5 rounded-md text-xs mt-2"><i class="fas fa-plus mr-1"></i>リンクを追加</button></div>
                     <button data-action="save-profile" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">プロフィールを保存</button>
                     <p id="pf-saved" class="text-xs text-emerald-400 hidden">保存しました。</p>
@@ -548,12 +540,7 @@
                     <button data-action="toggle-blog-comments" class="px-1" title="切替"><i class="fas ${u.blogComments?'fa-toggle-on':'fa-toggle-off'} text-3xl" style="color:${u.blogComments?'var(--accent-color)':'var(--text-muted-color)'}"></i></button></div>
                 ${canWriteBlog(u)?`<div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3">自分の記事</h3>
                     <div class="space-y-2">${mine.length?mine.map(b=>`<div class="flex items-center gap-2 rounded-lg px-3 py-2" style="background:var(--bg-color)"><span class="text-sm flex-1 truncate cursor-pointer" data-action="open-blog" data-id="${b.id}">${esc(b.title)}</span><button data-action="edit-blog" data-id="${b.id}" class="btn-ghost text-xs px-2 py-1 rounded">編集</button><button data-action="del-blog" data-id="${b.id}" class="btn-ghost text-xs px-2 py-1 rounded">削除</button></div>`).join(''):`<p class="text-sm" style="color:var(--text-muted-color)">まだ記事がありません。</p>`}</div></div>`
-                    :`<div class="card rounded-2xl p-5 mt-4 text-sm" style="color:var(--text-muted-color)">ブログ記事は管理人・執筆者が投稿できます。執筆をご希望の場合は管理人にご連絡ください。</div>`}`);
-        } else if(page==='appearance'){
-            const light=document.documentElement.classList.contains('light');
-            html = wrap('表示設定', `<div class="card rounded-2xl p-5"><h3 class="font-bold mb-3">テーマ</h3><div class="flex gap-3">
-                <button data-action="set-theme" data-theme="dark" class="${light?'btn-ghost':'btn-accent'} flex-1 py-3 rounded-lg font-semibold"><i class="fas fa-moon mr-2"></i>ダーク</button>
-                <button data-action="set-theme" data-theme="light" class="${light?'btn-accent':'btn-ghost'} flex-1 py-3 rounded-lg font-semibold"><i class="fas fa-sun mr-2"></i>ライト</button></div></div>`);
+                    :`<div class="card rounded-2xl p-5 mt-4 text-sm" style="color:var(--text-muted-color)">ブログ記事は管理人・ブロガーが投稿できます。執筆をご希望の場合は管理人にご連絡ください。</div>`}`);
         } else if(page==='data'){
             html = wrap('データ', `<div class="card rounded-2xl p-5"><p class="text-sm mb-3" style="color:var(--text-muted-color)">この端末のデータをバックアップ・復元できます。試作版では端末内にのみ保存されるため、定期的なエクスポートをおすすめします。</p>
                 <div class="flex flex-wrap gap-2"><button data-action="export" class="btn-ghost px-4 py-2 rounded-md text-sm"><i class="fas fa-download mr-1"></i>エクスポート</button>
@@ -562,15 +549,18 @@
             html = wrap('その他', `
                 <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1">利用規約</h3><p class="text-sm" style="color:var(--text-muted-color)">本サービスは小説家どうしの交流を目的としています。誹謗中傷・無断転載・公序良俗に反する投稿は禁止です。（試作版のサンプル文面）</p></div>
                 <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">プライバシーポリシー</h3><p class="text-sm" style="color:var(--text-muted-color)">試作版では、入力された情報はこの端末のブラウザ内にのみ保存され、外部送信されません。（サンプル文面）</p></div>
-                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">お問い合わせ</h3><p class="text-sm" style="color:var(--text-muted-color)">ご意見・ご要望は管理人までお寄せください。</p></div>
-                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆灯（ふでび） 試作版 v0.2</p></div>`);
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1"><i class="fas fa-paper-plane mr-2" style="color:var(--accent-color)"></i>お問い合わせ・ご意見</h3>
+                    <p class="text-xs mb-3" style="color:var(--text-muted-color)">試作版でも、皆さまの声をお待ちしています。いただいた内容は管理人だけが確認します。</p>
+                    <textarea id="fb-input" rows="4" maxlength="2000" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="ご感想・ご要望・不具合など、お気軽にどうぞ"></textarea>
+                    <div class="flex items-center justify-between mt-2"><p id="fb-msg" class="text-xs text-emerald-400 hidden">送信しました。ありがとうございます。</p>
+                    <button data-action="send-feedback" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold ml-auto">送信する</button></div></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆灯（ふでび） 試作版 v0.3</p></div>`);
         } else if(page==='admin'){
             html = wrap('管理人メニュー', `
-                <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1"><i class="fas fa-user-plus mr-2" style="color:var(--accent-color)"></i>執筆者として招待</h3>
-                    <p class="text-xs mb-3" style="color:var(--text-muted-color)">登録済みメンバーのメールアドレスを入力すると、ブログを書ける「執筆者」になります。</p>
-                    <div class="flex gap-2"><input type="email" id="invite-email" class="input-field flex-1 px-3 py-2 rounded-md" placeholder="author@example.com"><button data-action="invite" class="btn-accent px-4 rounded-md text-sm font-semibold">招待</button></div>
-                    <p id="invite-msg" class="text-xs mt-2 hidden"></p></div>
-                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3">メンバー一覧（${users.length}）</h3><div id="member-list" class="space-y-2"></div></div>
+                <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1"><i class="fas fa-users-gear mr-2" style="color:var(--accent-color)"></i>ユーザー管理</h3>
+                    <p class="text-xs mb-3" style="color:var(--text-muted-color)">「ブロガー認定」でブログ執筆を許可、「BAN」でアカウントを強制退会させます（同じメールアドレスでの再登録もできなくなります）。</p>
+                    <div id="member-list" class="space-y-2"></div></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3"><i class="fas fa-comment-dots mr-2" style="color:var(--accent-color)"></i>ユーザーからの声（${feedbacks.length}）</h3><div class="space-y-2">${renderFeedbacks()}</div></div>
                 <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3"><i class="fas fa-flag mr-2 text-rose-400"></i>通報一覧（${reports.length}）</h3><div class="space-y-2">${renderReports()}</div></div>`);
         } else if(page==='following' || page==='followers'){
             const isF=page==='following';
@@ -596,10 +586,19 @@
             return `<div class="rounded-lg px-3 py-2 text-sm" style="background:var(--bg-color)"><div class="flex items-center gap-2"><span class="badge" style="background:var(--danger-color);color:#fff">${LBL[r.type]||r.type}</span><span class="text-xs" style="color:var(--text-muted-color)">${timeAgo(r.createdAt)}・通報者：${esc(by?by.penname:'不明')}</span></div>${r.reason?`<p class="mt-1">${esc(r.reason)}</p>`:''}</div>`;
         }).join('');
     }
+    function renderFeedbacks(){
+        if(!feedbacks.length) return `<p class="text-sm" style="color:var(--text-muted-color)">まだ届いていません。</p>`;
+        const fmtLog = ts => { const d=new Date(ts); return `${d.getMonth()+1}月${d.getDate()}日 ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`; };
+        return feedbacks.slice().reverse().map(f=>{ const by=userById(f.byId);
+            return `<div class="rounded-lg px-3 py-2 text-sm" style="background:var(--bg-color)">
+                <div class="text-xs" style="color:var(--text-muted-color)"><i class="far fa-clock mr-1"></i>${fmtLog(f.createdAt)}　<i class="fas fa-user mr-1"></i>${esc(by?by.penname:f.byName||'退会者')}<span class="ml-1">（${esc(f.byEmail||'')}）</span></div>
+                <p class="mt-1 whitespace-pre-wrap break-words">${esc(f.body)}</p></div>`;
+        }).join('');
+    }
     function renderMemberList(){ const u=me(); const el=$('#member-list'); if(!el)return;
-        el.innerHTML = users.map(m=>`<div class="flex items-center gap-2 rounded-lg px-3 py-2" style="background:var(--bg-color)">${avatar(m,'w-7 h-7 text-xs',true)}
+        el.innerHTML = users.map(m=>`<div class="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap" style="background:var(--bg-color)">${avatar(m,'w-7 h-7 text-xs',true)}
             <div class="flex-1 min-w-0"><div class="flex items-center gap-2"><span class="text-sm font-semibold truncate">${esc(m.penname)}</span>${roleBadge(m.role)}</div><span class="text-[11px] truncate block" style="color:var(--text-muted-color)">${esc(m.email)}</span></div>
-            ${m.id!==u.id&&m.role!=='admin'?(m.role==='author'?`<button data-action="set-role" data-id="${m.id}" data-role="member" class="btn-ghost text-xs px-2 py-1 rounded">権限を外す</button>`:`<button data-action="set-role" data-id="${m.id}" data-role="author" class="btn-accent text-xs px-2 py-1 rounded">執筆者にする</button>`):''}</div>`).join('');
+            ${m.id!==u.id&&m.role!=='admin'?`<div class="flex gap-1">${m.role==='author'?`<button data-action="set-role" data-id="${m.id}" data-role="member" class="btn-ghost text-xs px-2 py-1 rounded">認定を外す</button>`:`<button data-action="set-role" data-id="${m.id}" data-role="author" class="btn-accent text-xs px-2 py-1 rounded">ブロガー認定</button>`}<button data-action="ban" data-id="${m.id}" class="btn-danger text-xs px-2 py-1 rounded">BAN</button></div>`:''}</div>`).join('');
     }
 
     // プロフィール編集：リンク行
@@ -621,8 +620,6 @@
         const t = e.target.closest('[data-action]'); if(!t) return;
         const a = t.dataset.action, id = t.dataset.id, u = me();
         switch(a){
-            case 'theme': applyTheme(document.documentElement.classList.contains('light')?'dark':'light'); break;
-            case 'set-theme': applyTheme(t.dataset.theme); renderSubpage('appearance'); break;
             case 'bell': push('notifications', renderNotifications); break;
             case 'back': back(); break;
             case 'nav': navTo(t.dataset.view); break;
@@ -696,12 +693,23 @@
             // ブログ設定
             case 'toggle-blog-comments': { u.blogComments=!u.blogComments; persist(); renderSubpage('blog'); } break;
 
-            // 管理人
-            case 'invite': { const email=$('#invite-email').value.trim().toLowerCase(); const msg=$('#invite-msg'); msg.classList.remove('hidden'); const target=users.find(x=>x.email===email); if(!target){ msg.className='text-xs mt-2 text-rose-400'; msg.textContent='その登録メンバーが見つかりません（先に本人の登録が必要です）。'; break; } if(target.role==='admin'){ msg.className='text-xs mt-2 text-rose-400'; msg.textContent='その方は管理人です。'; break; } target.role='author'; persist(); renderMemberList(); renderBlog(); msg.className='text-xs mt-2 text-emerald-400'; msg.textContent=`${target.penname} さんを執筆者に招待しました。`; $('#invite-email').value=''; } break;
-            case 'set-role': { const m=userById(id); m.role=t.dataset.role; persist(); renderMemberList(); renderBlog(); toast(t.dataset.role==='author'?'執筆者に設定しました':'執筆権限を外しました'); } break;
+            // お問い合わせ送信（管理人だけが「ユーザーからの声」で閲覧）
+            case 'send-feedback': { const ta=$('#fb-input'); const body=ta.value.trim(); if(!body){ toast('内容を入力してください'); break; } feedbacks.push({id:uid(),byId:u.id,byName:u.penname,byEmail:u.email,body,createdAt:Date.now()}); persist(); ta.value=''; const m=$('#fb-msg'); if(m){ m.classList.remove('hidden'); setTimeout(()=>m.classList.add('hidden'),2600); } toast('送信しました。ありがとうございます。'); } break;
+
+            // 管理人：ユーザー管理
+            case 'set-role': { const m=userById(id); m.role=t.dataset.role; persist(); renderMemberList(); renderBlog(); toast(t.dataset.role==='author'?'ブロガーに認定しました':'ブロガー認定を外しました'); } break;
+            case 'ban': {
+                const m=userById(id); if(!m||m.role==='admin')break;
+                if(!confirm(`${m.penname} さんをBANしますか？\nアカウントは強制的に退会処理され、同じメールアドレスでは再登録・ログインできなくなります。`))break;
+                if(!banned.includes(m.email)) banned.push(m.email);
+                const mid=m.id; users=users.filter(x=>x.id!==mid);
+                users.forEach(o=>{ o.following=o.following.filter(x=>x!==mid); o.followers=o.followers.filter(x=>x!==mid); o.blocked=o.blocked.filter(x=>x!==mid); });
+                notifs=notifs.filter(n=>n.toId!==mid&&n.fromId!==mid);
+                persist(); renderMemberList(); renderBlog(); renderFeed(); renderHome(); toast(`${m.penname} さんをBANしました`);
+            } break;
 
             // データ
-            case 'export': { const data={users,posts,blogs,notifs,reports,exportedAt:new Date().toISOString()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fudebi-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); } break;
+            case 'export': { const data={users,posts,blogs,notifs,reports,feedbacks,banned,exportedAt:new Date().toISOString()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fudebi-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); } break;
         }
     });
 
@@ -722,7 +730,7 @@
         const file=e.target.files[0]; if(!file)return;
         const reader=new FileReader();
         reader.onload=()=>{ try{ const d=JSON.parse(reader.result); if(!Array.isArray(d.users))throw new Error('形式が不正です'); if(!confirm('現在のデータを上書きしてインポートします。よろしいですか？'))return;
-            users=d.users; posts=d.posts||[]; blogs=d.blogs||[]; notifs=d.notifs||[]; reports=d.reports||[];
+            users=d.users; posts=d.posts||[]; blogs=d.blogs||[]; notifs=d.notifs||[]; reports=d.reports||[]; feedbacks=d.feedbacks||[]; banned=d.banned||[];
             users.forEach(x=>{ x.following=x.following||[]; x.followers=x.followers||[]; x.blocked=x.blocked||[]; x.genres=x.genres||[]; x.links=x.links||[]; x.muteWords=x.muteWords||[]; if(x.blogComments===undefined)x.blogComments=true; });
             if(!users.some(x=>x.id===session))session=null; persist();
             if(session){ renderHeader(); updateBell(); navTo('home'); } else showAuth(); toast('インポートしました');
