@@ -8,23 +8,48 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* レトロな書庫・文豪の趣を漂わせるアースカラー（単一テーマ） */
+        /* 古い書庫の趣：木の棚・革の背表紙・日に焼けた紙（単一テーマ） */
         :root {
-            --bg-color: #ece1c9;        /* 白よりのベージュ（やや古紙の色） */
-            --card-bg-color: #f6efdc;   /* 生成りの紙色 */
-            --border-color: #cdbb98;    /* くすんだ亜麻色 */
-            --text-color: #4a3526;      /* 濃い茶（インク） */
-            --text-muted-color: #8a7458;/* セピア */
-            --accent-color: #8a5a36;    /* テラコッタ／革表紙の茶 */
-            --accent-hover-color: #6f4527;
-            --accent-soft-color: rgba(138,90,54,0.12);
-            --danger-color: #a8472f;    /* 朱／弁柄色 */
-            --danger-hover-color: #8a3824;
-            --header-bg-color: #e3d6b8; /* 書棚の木肌 */
+            --bg-color: #e4d6b6;        /* 日に焼けた古紙 */
+            --card-bg-color: #f3ead2;   /* 生成りの紙色 */
+            --border-color: #bfa67a;    /* くすんだ亜麻色 */
+            --text-color: #3c2a1b;      /* 焦茶のインク */
+            --text-muted-color: #7c6549;/* セピア */
+            --accent-color: #7a4a2a;    /* 革表紙の茶 */
+            --accent-hover-color: #5d3720;
+            --accent-soft-color: rgba(122,74,42,0.13);
+            --danger-color: #9e4329;    /* 弁柄色 */
+            --danger-hover-color: #7f341f;
+            --header-bg-color: #d8c49b; /* 書棚の木肌 */
+            --wood-line: rgba(90,62,36,.07);
+            --shelf-edge: #a98c5d;
         }
-        body { font-family: 'Inter','Noto Sans JP',sans-serif; background-color: var(--bg-color); color: var(--text-color); }
+        body {
+            font-family: 'Inter','Noto Sans JP',sans-serif; color: var(--text-color);
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 18% 8%, rgba(255,250,235,.35), transparent 42%),
+                radial-gradient(circle at 85% 92%, rgba(60,42,27,.07), transparent 48%),
+                repeating-linear-gradient(0deg, rgba(120,90,60,.022) 0px, rgba(120,90,60,.022) 1px, transparent 1px, transparent 4px);
+            background-attachment: fixed;
+        }
         .serif { font-family: 'Noto Serif JP', serif; }
-        .card { background-color: var(--card-bg-color); border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -2px rgba(0,0,0,.08); transition: background-color .3s, border-color .3s; }
+        .card {
+            background-color: var(--card-bg-color);
+            background-image: linear-gradient(180deg, rgba(255,252,242,.5), rgba(255,252,242,0) 55%);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 10px -3px rgba(60,40,20,.18), 0 2px 4px -2px rgba(60,40,20,.12), inset 0 0 0 1px rgba(255,250,235,.35);
+            transition: background-color .3s, border-color .3s, box-shadow .2s;
+        }
+        /* 書棚の棚板（ヘッダー・ボトムナビ） */
+        .lib-shelf {
+            background-color: var(--header-bg-color);
+            background-image:
+                linear-gradient(180deg, rgba(255,250,235,.4), rgba(90,62,36,.10)),
+                repeating-linear-gradient(90deg, var(--wood-line) 0 2px, transparent 2px 11px);
+        }
+        .lib-shelf-top { border-bottom: 2px solid var(--shelf-edge) !important; box-shadow: 0 4px 8px rgba(60,40,20,.20); }
+        .lib-shelf-bottom { border-top: 2px solid var(--shelf-edge) !important; box-shadow: 0 -4px 8px rgba(60,40,20,.20); }
         .btn-accent { background-color: var(--accent-color); color:#fff; transition: background-color .2s, transform .1s; box-shadow: 0 2px 4px rgba(0,0,0,.15); }
         .btn-accent:hover { background-color: var(--accent-hover-color); }
         .btn-accent:active { transform: translateY(1px); }
@@ -89,7 +114,18 @@
         .rt-editor p, .blog-body.rich p { margin:.6em 0; }
         .rt-editor u, .blog-body.rich u { text-decoration: underline; }
         .blog-body.rich { white-space: normal; }
-        .blog-tag { display:inline-block; font-size:.7rem; padding:.1rem .55rem; border-radius:9999px; background:var(--accent-soft-color); color:var(--accent-color); }
+        .blog-tag { display:inline-block; font-size:.7rem; padding:.12rem .6rem; border-radius:3px; background:rgba(122,74,42,.08); border:1px solid var(--border-color); color:var(--accent-color); }
+        /* 書庫らしい細部 */
+        h1, h2, h3 { letter-spacing:.02em; }
+        .blog-body.serif, .rt-editor.serif { letter-spacing:.012em; }
+        .avatar { box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), 0 1px 2px rgba(40,26,14,.25); }
+        button.card { transition: transform .15s, box-shadow .2s, background-color .3s, border-color .3s; }
+        button.card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgba(60,40,20,.26), inset 0 0 0 1px rgba(255,250,235,.4); border-color: var(--accent-color); }
+        .chip { background: rgba(255,252,242,.4); }
+        /* 蔵書ラベル風の見出し（左に革色の罫） */
+        .lib-heading { border-left: 4px solid var(--accent-color); padding-left:.6rem; }
+        /* スクロールバーも木の色味へ */
+        ::-webkit-scrollbar-thumb { background: var(--shelf-edge); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -157,7 +193,7 @@
 
 <!-- ============ アプリ本体 ============ -->
 <div id="app-screen" class="hidden">
-    <header class="sticky top-0 z-20 border-b" style="background-color:var(--header-bg-color); border-color:var(--border-color)">
+    <header class="lib-shelf lib-shelf-top sticky top-0 z-20 border-b" style="border-color:var(--border-color)">
         <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
             <h1 data-action="nav" data-view="home" class="serif text-xl font-bold tracking-wider cursor-pointer select-none" style="color:var(--accent-color)" title="ホームへ"><i class="fas fa-book-bookmark mr-1 text-base"></i>筆置</h1>
             <div class="flex items-center gap-2">
@@ -273,7 +309,7 @@
         </section>
     </main>
 
-    <nav class="bottom-nav fixed bottom-0 left-0 right-0 z-20 border-t" style="background-color:var(--header-bg-color); border-color:var(--border-color)">
+    <nav class="bottom-nav lib-shelf lib-shelf-bottom fixed bottom-0 left-0 right-0 z-20 border-t" style="border-color:var(--border-color)">
         <div class="max-w-2xl mx-auto grid grid-cols-4">
             <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="home"><i class="fas fa-house nav-icon text-lg"></i><span class="text-[11px]">ホーム</span></button>
             <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="koryu"><i class="fas fa-comments nav-icon text-lg"></i><span class="text-[11px]">交流</span></button>
