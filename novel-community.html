@@ -608,7 +608,7 @@
             const tags=(m.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
             return `<div class="card rounded-2xl p-4 fade-in" style="${m.pinned?'border-color:var(--accent-color)':''}">
                 <div class="flex items-start gap-2">
-                    <button data-action="memo-pin" data-id="${m.id}" class="px-1 pt-0.5 flex-shrink-0" title="${m.pinned?'ピン留めを外す':'ピン留め'}" style="color:${m.pinned?'var(--accent-color)':'var(--text-muted-color)'}"><i class="fa-${m.pinned?'solid':'regular'} fa-thumbtack"></i></button>
+                    <button data-action="memo-pin" data-id="${m.id}" class="px-1 pt-0.5 flex-shrink-0" title="${m.pinned?'ピン留めを外す':'ピン留め'}" style="color:${m.pinned?'var(--accent-color)':'var(--text-muted-color)'}"><i class="fa-${m.pinned?'solid':'regular'} fa-thumbtack" style="transform:rotate(45deg);display:inline-block"></i></button>
                     <div class="flex-1 min-w-0 cursor-pointer" data-action="open-memo" data-id="${m.id}">
                         <div class="flex items-center gap-2"><span class="serif font-bold truncate">${esc(m.title||'無題')}</span><span class="text-[11px] ml-auto whitespace-nowrap" style="color:var(--text-muted-color)">${timeAgo(m.updatedAt)}</span></div>
                         ${prev?`<p class="text-sm mt-1" style="color:var(--text-muted-color)">${esc(prev)}${(m.body||'').length>70?'…':''}</p>`:''}
@@ -637,7 +637,7 @@
             <div class="card rounded-2xl p-5 space-y-3">
                 <div class="flex items-center gap-2">
                     <input type="text" id="memo-title" maxlength="80" class="input-field flex-1 px-3 py-2 rounded-md serif text-lg" placeholder="タイトル（無題でも可）" value="${m?esc(m.title):''}">
-                    <button id="memo-pin-btn" data-action="memo-pin-toggle" class="w-10 h-10 rounded-md btn-ghost flex items-center justify-center flex-shrink-0" title="ピン留め" style="${pinned?'color:#fff;background:var(--accent-color);border-color:var(--accent-color)':''}"><i class="fa-${pinned?'solid':'regular'} fa-thumbtack"></i></button>
+                    <button id="memo-pin-btn" data-action="memo-pin-toggle" class="w-10 h-10 rounded-md btn-ghost flex items-center justify-center flex-shrink-0" title="ピン留め" style="${pinned?'color:#fff;background:var(--accent-color);border-color:var(--accent-color)':''}"><i class="fa-${pinned?'solid':'regular'} fa-thumbtack" style="transform:rotate(45deg);display:inline-block"></i></button>
                 </div>
                 <div>
                     <label class="block text-xs mb-1" style="color:var(--text-muted-color)">タグ</label>
@@ -1126,7 +1126,7 @@
             case 'memo-new': renderMemoEdit(null); push('memo-edit', null); break;
             case 'open-memo': { renderMemoEdit(id); push('memo-edit', null); } break;
             case 'memo-tag-toggle': { t.classList.toggle('on'); } break;
-            case 'memo-pin-toggle': { memoEditPinned=!memoEditPinned; const ic=t.querySelector('i'); if(ic)ic.className=`fa-${memoEditPinned?'solid':'regular'} fa-thumbtack`; if(memoEditPinned){ t.style.color='#fff'; t.style.background='var(--accent-color)'; t.style.borderColor='var(--accent-color)'; } else { t.style.color=''; t.style.background=''; t.style.borderColor=''; } } break;
+            case 'memo-pin-toggle': { memoEditPinned=!memoEditPinned; const ic=t.querySelector('i'); if(ic){ ic.className=`fa-${memoEditPinned?'solid':'regular'} fa-thumbtack`; ic.style.transform='rotate(45deg)'; ic.style.display='inline-block'; } if(memoEditPinned){ t.style.color='#fff'; t.style.background='var(--accent-color)'; t.style.borderColor='var(--accent-color)'; } else { t.style.color=''; t.style.background=''; t.style.borderColor=''; } } break;
             case 'memo-save': {
                 const title=$('#memo-title').value.trim(), body=$('#memo-body').value;
                 if(!title && !body.trim()){ toast('内容を入力してください'); break; }
