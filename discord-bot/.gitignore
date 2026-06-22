@@ -1,0 +1,12 @@
+# 秘密情報
+.env
+
+# データ（ベクトルDB・設定）
+data/*.sqlite3
+data/*.sqlite3-*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
