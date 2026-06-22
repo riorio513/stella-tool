@@ -60,6 +60,12 @@
         .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 10rem) !important; }
         .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
         a.exlink { color: var(--accent-color); }
+        .fold-btn { color: var(--accent-color); font-size:.8rem; font-weight:600; margin-left:.25rem; cursor:pointer; }
+        .post-highlight { box-shadow: 0 0 0 2px var(--accent-color), 0 4px 6px -1px rgba(0,0,0,.08) !important; transition: box-shadow .4s; }
+        .vis-item { display:flex; align-items:flex-start; gap:.6rem; width:100%; text-align:left; padding:.75rem 1rem; transition: background-color .15s; }
+        .vis-item:hover { background: var(--accent-soft-color); }
+        .vis-item + .vis-item { border-top:1px solid var(--border-color); }
+        .vis-item.on { background: var(--accent-soft-color); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -144,15 +150,36 @@
 
         <!-- 交流 -->
         <section id="view-koryu" class="view hidden space-y-4">
-            <div class="flex gap-2">
-                <button data-action="feedtab" data-tab="all" class="feedtab btn-accent px-4 py-1.5 rounded-full text-sm font-semibold">すべて</button>
-                <button data-action="feedtab" data-tab="following" class="feedtab btn-ghost px-4 py-1.5 rounded-full text-sm font-semibold">フォロー中</button>
+            <div class="flex items-center gap-2">
+                <button data-action="feedtab" data-tab="following" class="feedtab btn-accent px-4 py-1.5 rounded-full text-sm font-semibold">フォロー中</button>
+                <button data-action="feedtab" data-tab="all" class="feedtab btn-ghost px-4 py-1.5 rounded-full text-sm font-semibold">全体</button>
+                <div class="ml-auto flex items-center gap-1">
+                    <button data-action="toggle-search" class="w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="投稿を検索"><i class="fas fa-magnifying-glass"></i></button>
+                    <button data-action="show-bookmarks" class="w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="ブックマーク一覧"><i class="fas fa-bookmark"></i></button>
+                </div>
+            </div>
+            <div id="search-box" class="card rounded-2xl p-3 hidden">
+                <div class="flex gap-2 items-center">
+                    <i class="fas fa-magnifying-glass" style="color:var(--text-muted-color)"></i>
+                    <input type="text" id="search-input" class="input-field flex-1 px-3 py-1.5 rounded-md text-sm" placeholder="ことばで投稿を検索…">
+                    <button data-action="clear-search" class="btn-ghost px-3 py-1.5 rounded-md text-xs">クリア</button>
+                </div>
             </div>
             <div class="card rounded-2xl p-4">
-                <textarea id="post-input" rows="3" maxlength="1000" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="いま考えていること、執筆の進捗など…"></textarea>
-                <div class="flex justify-between items-center mt-2">
-                    <span class="text-xs" style="color:var(--text-muted-color)"><i class="fas fa-users mr-1"></i>登録メンバーに公開されます</span>
-                    <button data-action="post" class="btn-accent px-4 py-1.5 rounded-md text-sm font-semibold">投稿</button>
+                <textarea id="post-input" rows="3" maxlength="200" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="いま考えていること、執筆の進捗など…（200字まで）"></textarea>
+                <div class="flex justify-between items-center mt-2 gap-2">
+                    <span id="post-count" class="text-xs whitespace-nowrap" style="color:var(--text-muted-color)">0 / 200</span>
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <button id="vis-btn" data-action="toggle-visibility" class="btn-ghost px-3 py-1.5 rounded-md text-sm font-semibold flex items-center whitespace-nowrap"><i class="fas fa-angle-down mr-1"></i>投稿先</button>
+                            <div id="vis-menu" class="hidden absolute right-0 bottom-full mb-2 w-60 card rounded-xl overflow-hidden z-30">
+                                <button data-action="set-visibility" data-vis="followers" class="vis-item"><i class="fas fa-user-group mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">フォロワーのみ</p><p class="text-xs" style="color:var(--text-muted-color)">あなたをフォローしている人だけに見えます</p></div></button>
+                                <button data-action="set-visibility" data-vis="public" class="vis-item"><i class="fas fa-globe mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">誰もが見える</p><p class="text-xs" style="color:var(--text-muted-color)">すべての利用者に見えます</p></div></button>
+                                <button data-action="set-visibility" data-vis="private" class="vis-item"><i class="fas fa-lock mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">自分だけ</p><p class="text-xs" style="color:var(--text-muted-color)">誰にも見えません（自分用のメモ）</p></div></button>
+                            </div>
+                        </div>
+                        <button data-action="post" class="btn-accent px-4 py-1.5 rounded-md text-sm font-semibold">投稿</button>
+                    </div>
                 </div>
             </div>
             <div id="feed-list" class="space-y-4"></div>
@@ -172,12 +199,13 @@
         <section id="view-subpage" class="view hidden space-y-4"></section>
         <section id="view-profile" class="view hidden space-y-4"></section>
         <section id="view-notifications" class="view hidden space-y-4"></section>
+        <section id="view-bookmarks" class="view hidden space-y-4"></section>
 
         <!-- 設定トップ -->
         <section id="view-settings" class="view hidden space-y-4">
             <div class="card rounded-2xl overflow-hidden" id="settings-menu"></div>
             <button data-action="logout" class="btn-danger w-full py-2.5 rounded-md font-semibold"><i class="fas fa-right-from-bracket mr-2"></i>ログアウト</button>
-            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆灯 試作版 v0.3 ／ データはこの端末内に保存されます</p>
+            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆灯 試作版 v0.4 ／ データはこの端末内に保存されます</p>
         </section>
     </main>
 
@@ -195,7 +223,7 @@
 
 <script>
 /* =========================================================
-   筆灯 (Fudebi) — 小説家の交流サイト 試作版 v0.3
+   筆灯 (Fudebi) — 小説家の交流サイト 試作版 v0.4
    データは localStorage に保存（この端末のみ）。
    ※試作のためパスワードは簡易ハッシュです。本番運用時は
      クラウド/サーバー側の認証に置き換えてください。
@@ -223,6 +251,12 @@
         u.bio = u.bio || ''; u.genres = u.genres || []; u.links = u.links || [];
         u.following = u.following || []; u.followers = u.followers || []; u.blocked = u.blocked || [];
         u.muteWords = u.muteWords || []; if (u.blogComments === undefined) u.blogComments = true;
+    });
+    posts.forEach(p => {
+        p.lamps = p.lamps || p.likes || [];   // 旧「いいね」は「灯」へ引き継ぎ
+        p.bookmarks = p.bookmarks || [];
+        p.comments = p.comments || [];
+        if (!p.visibility) p.visibility = 'public';   // 旧投稿は全体公開扱い
     });
 
     const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.session, session); };
@@ -316,11 +350,59 @@
     function renderHome(){ const u=me(); if(!u)return; $('#home-greeting').textContent=u.penname+' さん'; $('#home-stat-posts').textContent=posts.length; $('#home-stat-blogs').textContent=blogs.length; $('#home-stat-users').textContent=users.length; }
 
     // ================= 交流（SNS） =================
-    let feedTab = 'all';
-    function renderKoryu(){ $$('.feedtab').forEach(b=>{ const on=b.dataset.tab===feedTab; b.className=`feedtab ${on?'btn-accent':'btn-ghost'} px-4 py-1.5 rounded-full text-sm font-semibold`; }); renderFeed(); }
+    const FOLD = 100;          // この文字数を超えたら折りたたむ
+    const POST_MAX = 200;      // 投稿の文字数上限
+    let feedTab = 'following'; // 初期表示はフォロー中
+    let composeVis = null;     // 投稿先（毎回かならず選ぶ）
+    let searchQuery = '';
+    let searchOpen = false;
+    const VIS = {
+        followers:{label:'フォロワーのみ', icon:'fa-user-group'},
+        public:   {label:'誰もが見える',   icon:'fa-globe'},
+        private:  {label:'自分だけ',       icon:'fa-lock'},
+    };
+
+    // 投稿の可視性判定（自分の投稿は常に見える。private は本人のみ）
+    function canSee(p){
+        if(p.authorId===session) return true;
+        if(p.visibility==='private') return false;
+        if(p.visibility==='public') return true;
+        if(p.visibility==='followers'){ const me_=me(); return me_ && me_.following.includes(p.authorId); }
+        return true;
+    }
+
+    function updateComposeUI(){
+        const btn=$('#vis-btn'); if(!btn) return;
+        if(composeVis){ const v=VIS[composeVis]; btn.innerHTML=`<i class="fas ${v.icon} mr-1"></i>${v.label}`; btn.style.color='#fff'; btn.style.backgroundColor='var(--accent-color)'; btn.style.borderColor='var(--accent-color)'; }
+        else { btn.innerHTML=`<i class="fas fa-angle-down mr-1"></i>投稿先`; btn.style.color=''; btn.style.backgroundColor=''; btn.style.borderColor=''; }
+        $$('#vis-menu .vis-item').forEach(it=>it.classList.toggle('on', it.dataset.vis===composeVis));
+    }
+
+    function renderKoryu(){
+        $$('.feedtab').forEach(b=>{ const on=b.dataset.tab===feedTab; b.className=`feedtab ${on?'btn-accent':'btn-ghost'} px-4 py-1.5 rounded-full text-sm font-semibold`; });
+        const sb=$('#search-box'); if(sb) sb.classList.toggle('hidden', !searchOpen);
+        const si=$('#search-input'); if(si) si.value=searchQuery;
+        updateComposeUI();
+        const ta=$('#post-input'); if(ta){ const c=$('#post-count'); if(c) c.textContent=`${ta.value.length} / ${POST_MAX}`; }
+        renderFeed();
+    }
+
+    function visBadge(p){
+        if(p.visibility==='private') return `<span class="text-[10px] px-1.5 py-0.5 rounded-full" style="background:var(--accent-soft-color);color:var(--accent-color)"><i class="fas fa-lock mr-0.5"></i>自分だけ</span>`;
+        if(p.visibility==='followers') return `<span class="text-[10px] px-1.5 py-0.5 rounded-full" style="background:var(--accent-soft-color);color:var(--accent-color)"><i class="fas fa-user-group mr-0.5"></i>フォロワー</span>`;
+        return '';
+    }
 
     function postCard(p){
-        const a=userById(p.authorId), liked=p.likes.includes(session), u=me();
+        const a=userById(p.authorId), u=me();
+        const lit=(p.lamps||[]).includes(session), marked=(p.bookmarks||[]).includes(session);
+        const cc=(p.comments||[]).filter(c=>!blockedEither(session,c.authorId)&&!hasMute(c.body,u.muteWords)).length;
+        // 本文（100字以降は折りたたみ）
+        const full=p.body||'';
+        const needFold=full.length>FOLD;
+        const head=esc(needFold?full.slice(0,FOLD):full);
+        const rest=needFold?esc(full.slice(FOLD)):'';
+        const bodyHtml=`<p class="post-body mt-1 whitespace-pre-wrap break-words">${head}${needFold?`<span class="fold-ellipsis">…</span><span class="fold-rest hidden">${rest}</span><button data-action="expand" class="fold-btn">全文表示</button>`:''}</p>`;
         const comments=(p.comments||[]).filter(c=>!blockedEither(session,c.authorId)&&!hasMute(c.body,u.muteWords)).map(c=>{
             const ca=userById(c.authorId);
             return `<div class="flex gap-2 mt-2">${avatar(ca,'w-7 h-7 text-xs',true)}
@@ -330,19 +412,20 @@
                     <p class="text-sm mt-0.5 whitespace-pre-wrap break-words">${esc(c.body)}</p>
                 </div></div>`;
         }).join('');
-        return `<div class="card rounded-2xl p-4 fade-in"><div class="flex gap-3">${avatar(a,'w-9 h-9 text-sm',true)}
+        return `<div id="post-${p.id}" class="card rounded-2xl p-4 fade-in"><div class="flex gap-3">${avatar(a,'w-9 h-9 text-sm',true)}
             <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap text-sm">${nameTag(a)}<span class="text-xs" style="color:var(--text-muted-color)">${timeAgo(p.createdAt)}</span>
+                <div class="flex items-center gap-2 flex-wrap text-sm">${nameTag(a)}<span class="text-xs" style="color:var(--text-muted-color)">${timeAgo(p.createdAt)}</span>${visBadge(p)}
                     ${p.authorId===session?`<button data-action="del-post" data-id="${p.id}" class="ml-auto text-xs" style="color:var(--text-muted-color)" title="削除"><i class="fas fa-trash"></i></button>`:`<button data-action="report" data-rtype="post" data-id="${p.id}" class="ml-auto text-xs" style="color:var(--text-muted-color)" title="通報"><i class="fas fa-flag"></i></button>`}
                 </div>
-                <p class="mt-1 whitespace-pre-wrap break-words">${esc(p.body)}</p>
-                <div class="flex items-center gap-4 mt-3 text-sm" style="color:var(--text-muted-color)">
-                    <button data-action="like" data-id="${p.id}" class="flex items-center gap-1" style="${liked?'color:var(--accent-color)':''}"><i class="fa${liked?'s':'r'} fa-heart"></i><span>${p.likes.length||''}</span></button>
-                    <button data-action="toggle-comment" data-id="${p.id}" class="flex items-center gap-1"><i class="far fa-comment"></i><span>${(p.comments||[]).length||''}</span></button>
+                ${bodyHtml}
+                <div class="flex items-center gap-5 mt-3 text-sm" style="color:var(--text-muted-color)">
+                    <button data-action="lamp" data-id="${p.id}" class="flex items-center gap-1.5" title="灯をともす" style="${lit?'color:var(--accent-color)':''}"><i class="fa-${lit?'solid':'regular'} fa-lightbulb"></i><span class="text-xs">灯をともす</span></button>
+                    <button data-action="toggle-comment" data-id="${p.id}" class="flex items-center gap-1.5" title="コメント"><i class="far fa-comment"></i>${cc?`<span class="text-xs">${cc}</span>`:''}</button>
+                    <button data-action="bookmark" data-id="${p.id}" class="flex items-center gap-1.5 ml-auto" title="ブックマーク" style="${marked?'color:var(--accent-color)':''}"><i class="fa-${marked?'solid':'regular'} fa-bookmark"></i></button>
                 </div>
                 <div class="comments mt-2 hidden" data-id="${p.id}">${comments}
                     <div class="flex gap-2 mt-3">
-                        <input type="text" class="comment-input input-field flex-1 px-3 py-1.5 rounded-md text-sm" data-id="${p.id}" placeholder="コメントを書く…" maxlength="500">
+                        <input type="text" class="comment-input input-field flex-1 px-3 py-1.5 rounded-md text-sm" data-id="${p.id}" placeholder="コメントを書く…（200字まで）" maxlength="200">
                         <button data-action="comment-send" data-id="${p.id}" class="btn-accent px-3 rounded-md text-sm">送信</button>
                     </div>
                 </div>
@@ -350,10 +433,29 @@
     }
     function renderFeed(){
         const u=me(); const list=$('#feed-list');
-        let vis=posts.filter(p=>!blockedEither(session,p.authorId)&&!hasMute(p.body,u.muteWords));
+        let vis=posts.filter(p=>canSee(p)&&!blockedEither(session,p.authorId)&&!hasMute(p.body,u.muteWords));
         if(feedTab==='following') vis=vis.filter(p=>u.following.includes(p.authorId)||p.authorId===session);
-        if(!vis.length){ list.innerHTML=emptyState('fa-comments', feedTab==='following'?'フォロー中の投稿がありません':'まだ投稿がありません', feedTab==='following'?'気になる人をフォローしてみましょう。':'最初のひとことを投稿してみましょう。'); return; }
+        const q=searchQuery.trim().toLowerCase();
+        if(q) vis=vis.filter(p=>(p.body||'').toLowerCase().includes(q));
+        if(!vis.length){
+            const msg = q ? ['fa-magnifying-glass','見つかりませんでした','別のことばで探してみてください。']
+                : feedTab==='following' ? ['fa-comments','フォロー中の投稿がありません','気になる人をフォローしてみましょう。']
+                : ['fa-comments','まだ投稿がありません','最初のひとことを投稿してみましょう。'];
+            list.innerHTML=emptyState(...msg); return;
+        }
         list.innerHTML=vis.map(postCard).join('');
+    }
+
+    // ブックマーク一覧
+    function renderBookmarks(){
+        const list=posts.filter(p=>(p.bookmarks||[]).includes(session)&&canSee(p)&&!blockedEither(session,p.authorId));
+        const body=list.length ? list.map(p=>{ const a=userById(p.authorId); const prev=(p.body||'').replace(/\s+/g,' ').slice(0,60);
+            return `<button data-action="jump-post" data-id="${p.id}" class="card rounded-2xl p-4 w-full text-left transition fade-in">
+                <div class="flex items-center gap-2 text-xs" style="color:var(--text-muted-color)">${avatar(a,'w-6 h-6 text-xs')}<span class="font-semibold" style="color:var(--text-color)">${esc(a?a.penname:'退会者')}</span><span>${timeAgo(p.createdAt)}</span>${visBadge(p)}</div>
+                <p class="text-sm mt-2 break-words">${esc(prev)}${(p.body||'').length>60?'…':''}</p>
+            </button>`; }).join('')
+            : emptyState('fa-bookmark','ブックマークはありません','気になる投稿のしおりマークを押すと、ここに集まります。');
+        $('#view-bookmarks').innerHTML = `${backBar('交流')}<h2 class="font-bold px-1 text-lg mb-1"><i class="fas fa-bookmark mr-2" style="color:var(--accent-color)"></i>ブックマーク</h2><div class="space-y-3">${body}</div>`;
     }
 
     // ================= ブログ =================
@@ -417,7 +519,7 @@
         const iBlock=u.blocked.includes(p.id);
         const links=(p.links||[]).filter(l=>l.url).map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="exlink inline-flex items-center gap-1 text-sm underline break-all"><i class="fas fa-link text-xs"></i>${esc(l.label||l.url)}</a>`).join('<span class="mx-2" style="color:var(--border-color)">|</span>');
         const genres=(p.genres||[]).map(g=>`<span class="chip on">${esc(g)}</span>`).join(' ');
-        const theirPosts = isMe||!iBlock ? posts.filter(x=>x.authorId===p.id).slice(0,20) : [];
+        const theirPosts = isMe||!iBlock ? posts.filter(x=>x.authorId===p.id&&canSee(x)).slice(0,20) : [];
         let actions='';
         if(!isMe){
             actions = `<div class="flex gap-2 mt-4">
@@ -446,8 +548,8 @@
     // ================= 通知一覧 =================
     function renderNotifications(){
         const mine = notifs.filter(n=>n.toId===session).sort((a,b)=>b.createdAt-a.createdAt);
-        const TXT = { like:'さんがあなたの投稿にいいねしました', comment:'さんがあなたの投稿にコメントしました', blogcomment:'さんがあなたの記事にコメントしました', follow:'さんがあなたをフォローしました' };
-        const ICON = { like:'fa-heart', comment:'fa-comment', blogcomment:'fa-comment-dots', follow:'fa-user-plus' };
+        const TXT = { lamp:'さんが、あなたの言葉に灯をともしました', like:'さんがあなたの投稿に灯をともしました', comment:'さんがあなたの投稿にコメントしました', blogcomment:'さんがあなたの記事にコメントしました', follow:'さんがあなたをフォローしました' };
+        const ICON = { lamp:'fa-lightbulb', like:'fa-lightbulb', comment:'fa-comment', blogcomment:'fa-comment-dots', follow:'fa-user-plus' };
         const body = mine.length ? mine.map(n=>{ const f=userById(n.fromId);
             return `<div class="card rounded-xl p-3 flex items-center gap-3 ${n.read?'':'border-l-4'}" ${n.read?'':'style="border-left-color:var(--accent-color)"'}>
                 ${avatar(f,'w-9 h-9 text-sm',true)}
@@ -554,7 +656,7 @@
                     <textarea id="fb-input" rows="4" maxlength="2000" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="ご感想・ご要望・不具合など、お気軽にどうぞ"></textarea>
                     <div class="flex items-center justify-between mt-2"><p id="fb-msg" class="text-xs text-emerald-400 hidden">送信しました。ありがとうございます。</p>
                     <button data-action="send-feedback" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold ml-auto">送信する</button></div></div>
-                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆灯（ふでび） 試作版 v0.3</p></div>`);
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆灯（ふでび） 試作版 v0.4</p></div>`);
         } else if(page==='admin'){
             html = wrap('管理人メニュー', `
                 <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1"><i class="fas fa-users-gear mr-2" style="color:var(--accent-color)"></i>ユーザー管理</h3>
@@ -617,6 +719,9 @@
 
     // ================= クリック処理（イベント委譲） =================
     document.addEventListener('click', e=>{
+        // 投稿先メニューの外側クリックで閉じる
+        const vm=document.getElementById('vis-menu');
+        if(vm && !vm.classList.contains('hidden') && !e.target.closest('#vis-menu') && !e.target.closest('[data-action="toggle-visibility"]')) vm.classList.add('hidden');
         const t = e.target.closest('[data-action]'); if(!t) return;
         const a = t.dataset.action, id = t.dataset.id, u = me();
         switch(a){
@@ -628,11 +733,41 @@
             case 'subpage': openSubpage(t.dataset.page); break;
             case 'open-profile': push('profile', ()=>renderProfile(id)); break;
 
-            case 'post': { const ta=$('#post-input'); const body=ta.value.trim(); if(!body)break; posts.unshift({id:uid(),authorId:session,body,createdAt:Date.now(),likes:[],comments:[]}); ta.value=''; persist(); renderFeed(); toast('投稿しました'); } break;
-            case 'del-post': if(confirm('この投稿を削除しますか？')){ posts=posts.filter(x=>x.id!==id); persist(); renderFeed(); } break;
-            case 'like': { const p=posts.find(x=>x.id===id); const i=p.likes.indexOf(session); if(i>=0){ p.likes.splice(i,1); removeNotif(p.authorId,'like',session,p.id);} else { p.likes.push(session); addNotif(p.authorId,'like',session,p.id);} persist(); renderFeed(); updateBell(); } break;
+            case 'toggle-search': { searchOpen=!searchOpen; const sb=$('#search-box'); if(sb)sb.classList.toggle('hidden',!searchOpen); if(searchOpen){ const si=$('#search-input'); if(si)si.focus(); } } break;
+            case 'clear-search': { searchQuery=''; const si=$('#search-input'); if(si)si.value=''; renderFeed(); } break;
+            case 'show-bookmarks': push('bookmarks', renderBookmarks); break;
+            case 'jump-post': { feedTab='all'; searchQuery=''; searchOpen=false; navTo('koryu'); const pid=id; setTimeout(()=>{ const el=document.getElementById('post-'+pid); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('post-highlight'); setTimeout(()=>el.classList.remove('post-highlight'),2200); } },80); } break;
+
+            case 'toggle-visibility': { const m=$('#vis-menu'); if(m)m.classList.toggle('hidden'); } break;
+            case 'set-visibility': { composeVis=t.dataset.vis; updateComposeUI(); const m=$('#vis-menu'); if(m)m.classList.add('hidden'); } break;
+            case 'post': {
+                const ta=$('#post-input'); const body=ta.value.trim(); if(!body)break;
+                if(!composeVis){ toast('投稿先の設定をしてください'); const m=$('#vis-menu'); if(m)m.classList.remove('hidden'); break; }
+                posts.unshift({id:uid(),authorId:session,body,visibility:composeVis,createdAt:Date.now(),lamps:[],comments:[],bookmarks:[]});
+                ta.value=''; const c=$('#post-count'); if(c)c.textContent=`0 / ${POST_MAX}`;
+                composeVis=null; updateComposeUI(); persist(); renderFeed();
+                toast('投稿しました');
+            } break;
+            case 'del-post': if(confirm('この投稿を削除しますか？')){ posts=posts.filter(x=>x.id!==id); persist(); const cur=hist[hist.length-1]; if(cur&&cur.render)cur.render(); } break;
+            case 'lamp': {
+                const p=posts.find(x=>x.id===id); if(!p)break; p.lamps=p.lamps||[];
+                const i=p.lamps.indexOf(session), lit=i<0;
+                if(lit){ p.lamps.push(session); addNotif(p.authorId,'lamp',session,p.id); }
+                else { p.lamps.splice(i,1); removeNotif(p.authorId,'lamp',session,p.id); }
+                persist(); updateBell();
+                t.style.color=lit?'var(--accent-color)':''; const ic=t.querySelector('i'); if(ic)ic.className=`fa-${lit?'solid':'regular'} fa-lightbulb`;
+            } break;
+            case 'bookmark': {
+                const p=posts.find(x=>x.id===id); if(!p)break; p.bookmarks=p.bookmarks||[];
+                const i=p.bookmarks.indexOf(session), on=i<0;
+                if(on)p.bookmarks.push(session); else p.bookmarks.splice(i,1);
+                persist();
+                t.style.color=on?'var(--accent-color)':''; const ic=t.querySelector('i'); if(ic)ic.className=`fa-${on?'solid':'regular'} fa-bookmark`;
+                toast(on?'ブックマークしました':'ブックマークを外しました');
+            } break;
+            case 'expand': { const wrap=t.closest('.post-body'); if(wrap){ const r=$('.fold-rest',wrap); if(r)r.classList.remove('hidden'); const el=$('.fold-ellipsis',wrap); if(el)el.remove(); } t.remove(); } break;
             case 'toggle-comment': { const c=$(`.comments[data-id="${id}"]`); if(c)c.classList.toggle('hidden'); } break;
-            case 'comment-send': { const box=t.closest('.comments'); const input=$('.comment-input',box); const body=input.value.trim(); if(!body)break; const p=posts.find(x=>x.id===id); (p.comments=p.comments||[]).push({id:uid(),authorId:session,body,createdAt:Date.now()}); addNotif(p.authorId,'comment',session,p.id); persist(); renderFeed(); updateBell(); const reopened=$(`.comments[data-id="${id}"]`); if(reopened)reopened.classList.remove('hidden'); } break;
+            case 'comment-send': { const box=t.closest('.comments'); const input=$('.comment-input',box); const body=input.value.trim(); if(!body)break; const p=posts.find(x=>x.id===id); (p.comments=p.comments||[]).push({id:uid(),authorId:session,body,createdAt:Date.now()}); addNotif(p.authorId,'comment',session,p.id); persist(); const cur=hist[hist.length-1]; if(cur&&cur.render)cur.render(); updateBell(); const reopened=$(`.comments[data-id="${id}"]`); if(reopened)reopened.classList.remove('hidden'); } break;
 
             case 'blog-new': renderBlogEdit(null); push('blog-edit', null); break;
             case 'edit-blog': renderBlogEdit(id); push('blog-edit', null); break;
@@ -724,6 +859,12 @@
         else if(e.target.id==='mute-input'){ e.preventDefault(); const btn=$('[data-action="add-mute"]'); if(btn)btn.click(); }
     });
 
+    // 入力（文字数カウンター・ライブ検索）
+    document.addEventListener('input', e=>{
+        if(e.target.id==='post-input'){ const c=$('#post-count'); if(c)c.textContent=`${e.target.value.length} / ${POST_MAX}`; }
+        else if(e.target.id==='search-input'){ searchQuery=e.target.value; renderFeed(); }
+    });
+
     // インポート（動的生成のため委譲）
     document.addEventListener('change', e=>{
         if(e.target.id!=='import-input') return;
@@ -732,6 +873,7 @@
         reader.onload=()=>{ try{ const d=JSON.parse(reader.result); if(!Array.isArray(d.users))throw new Error('形式が不正です'); if(!confirm('現在のデータを上書きしてインポートします。よろしいですか？'))return;
             users=d.users; posts=d.posts||[]; blogs=d.blogs||[]; notifs=d.notifs||[]; reports=d.reports||[]; feedbacks=d.feedbacks||[]; banned=d.banned||[];
             users.forEach(x=>{ x.following=x.following||[]; x.followers=x.followers||[]; x.blocked=x.blocked||[]; x.genres=x.genres||[]; x.links=x.links||[]; x.muteWords=x.muteWords||[]; if(x.blogComments===undefined)x.blogComments=true; });
+            posts.forEach(x=>{ x.lamps=x.lamps||x.likes||[]; x.bookmarks=x.bookmarks||[]; x.comments=x.comments||[]; if(!x.visibility)x.visibility='public'; });
             if(!users.some(x=>x.id===session))session=null; persist();
             if(session){ renderHeader(); updateBell(); navTo('home'); } else showAuth(); toast('インポートしました');
         }catch(err){ alert('読み込みに失敗しました：'+err.message); } };
