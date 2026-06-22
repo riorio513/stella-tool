@@ -163,13 +163,13 @@
         #book-stage.fade-out { opacity: 0; transition: opacity .26s ease; }
         .book3d-inner { position: absolute; top: 50%; left: 50%; width: 168px; height: 240px;
             transform: translate(-50%,-50%) scale(1); transform-style: preserve-3d;
-            transition: transform .62s cubic-bezier(.4,.1,.3,1), opacity .5s ease .12s; }
+            transition: transform .8s cubic-bezier(.4,.1,.3,1), opacity .62s ease .16s; }
         .book3d-inner.zoom { transform: translate(-50%,-50%) scale(3.6); opacity: 0; }
         .book3d-page { position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; background-color: var(--card-bg-color);
             background-image: linear-gradient(90deg, rgba(40,26,14,.18), transparent 14%); border: 1px solid var(--border-color);
             box-shadow: 0 14px 34px rgba(40,26,14,.5); }
         .book3d-cover { position: absolute; inset: 0; transform-origin: left center; transform: rotateY(0deg);
-            transition: transform .62s cubic-bezier(.42,.04,.25,1); border-radius: 3px 8px 8px 3px;
+            transition: transform .8s cubic-bezier(.42,.04,.25,1); border-radius: 3px 8px 8px 3px;
             display: flex; align-items: flex-start; justify-content: center; padding: 1.1rem .4rem; backface-visibility: hidden;
             box-shadow: inset -10px 0 16px -8px rgba(0,0,0,.32), 0 6px 18px rgba(40,26,14,.4); }
         .book3d-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 9px; background: rgba(0,0,0,.17);
@@ -536,16 +536,16 @@
             inner.classList.remove('zoom'); cover.style.transform = 'rotateY(0deg)';
             void stage.offsetWidth;
             requestAnimationFrame(()=>{ cover.style.transform = 'rotateY(-158deg)'; inner.classList.add('zoom'); });
-            setTimeout(done, 380);
-            setTimeout(()=> stage.classList.add('fade-out'), 540);
-            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 800);
+            setTimeout(done, 490);
+            setTimeout(()=> stage.classList.add('fade-out'), 700);
+            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 1000);
         } else { // close
             inner.classList.remove('zoom'); cover.style.transform = 'rotateY(-158deg)';
             void stage.offsetWidth;
             requestAnimationFrame(()=>{ cover.style.transform = 'rotateY(0deg)'; });
-            setTimeout(done, 440);
-            setTimeout(()=> stage.classList.add('fade-out'), 600);
-            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 860);
+            setTimeout(done, 560);
+            setTimeout(()=> stage.classList.add('fade-out'), 780);
+            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 1060);
         }
     }
 
