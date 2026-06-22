@@ -452,6 +452,10 @@
         b.format = b.format || 'text';        // 旧記事はプレーンテキスト
         if (!b.updatedAt) b.updatedAt = b.createdAt;
     });
+    memos.forEach(m => {
+        m.tags = m.tags || [];
+        if (m.pinned === undefined) m.pinned = false;
+    });
 
     const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.memos, memos); save(KEYS.session, session); };
 
@@ -587,15 +591,32 @@
         const bs=$('#home-blog-sub'); if(bs) bs.textContent = canWriteBlog(u) ? '記事を読む・書く' : '記事を読む'; }
 
     // ================= 個室（作業部屋） =================
-    function myMemos(){ return memos.filter(m=>m.ownerId===session).sort((a,b)=>b.updatedAt-a.updatedAt); }
+    const MEMO_TAGS = ['人物','設定','展開','ネタ','その他'];
+    const MEMO_MAX = 1000;
+    let memoEditPinned = false;   // 編集中のピン留め状態
+    function copyText(text){
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(()=>toast('コピーしました')).catch(()=>fallbackCopy(text)); }
+        else fallbackCopy(text);
+    }
+    function fallbackCopy(text){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand('copy'); toast('コピーしました'); }catch{ toast('コピーできませんでした'); } document.body.removeChild(ta); }
+    function myMemos(){ return memos.filter(m=>m.ownerId===session)
+        .sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0) || b.updatedAt-a.updatedAt ); }
     function renderRoom(){
         const mine=myMemos();
         const list = mine.length ? mine.map(m=>{
             const prev=(m.body||'').replace(/\s+/g,' ').slice(0,70);
-            return `<button data-action="open-memo" data-id="${m.id}" class="card rounded-2xl p-4 w-full text-left transition fade-in">
-                <div class="flex items-center gap-2"><i class="fas fa-pen-to-square" style="color:var(--accent-color)"></i><span class="serif font-bold flex-1 truncate">${esc(m.title||'無題')}</span><span class="text-[11px]" style="color:var(--text-muted-color)">${timeAgo(m.updatedAt)}</span></div>
-                ${prev?`<p class="text-sm mt-2" style="color:var(--text-muted-color)">${esc(prev)}${(m.body||'').length>70?'…':''}</p>`:''}
-            </button>`; }).join('')
+            const tags=(m.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
+            return `<div class="card rounded-2xl p-4 fade-in" style="${m.pinned?'border-color:var(--accent-color)':''}">
+                <div class="flex items-start gap-2">
+                    <button data-action="memo-pin" data-id="${m.id}" class="px-1 pt-0.5 flex-shrink-0" title="${m.pinned?'ピン留めを外す':'ピン留め'}" style="color:${m.pinned?'var(--accent-color)':'var(--text-muted-color)'}"><i class="fa-${m.pinned?'solid':'regular'} fa-thumbtack"></i></button>
+                    <div class="flex-1 min-w-0 cursor-pointer" data-action="open-memo" data-id="${m.id}">
+                        <div class="flex items-center gap-2"><span class="serif font-bold truncate">${esc(m.title||'無題')}</span><span class="text-[11px] ml-auto whitespace-nowrap" style="color:var(--text-muted-color)">${timeAgo(m.updatedAt)}</span></div>
+                        ${prev?`<p class="text-sm mt-1" style="color:var(--text-muted-color)">${esc(prev)}${(m.body||'').length>70?'…':''}</p>`:''}
+                        ${tags?`<div class="flex flex-wrap gap-1 mt-2">${tags}</div>`:''}
+                    </div>
+                    <button data-action="memo-copy" data-id="${m.id}" class="w-8 h-8 rounded-full btn-ghost flex items-center justify-center flex-shrink-0" title="本文をコピー"><i class="far fa-copy"></i></button>
+                </div>
+            </div>`; }).join('')
             : emptyState('fa-mug-hot','まだ何もありません','「新しい原稿」から、下書きやメモを自由に書けます。誰にも見えない、あなただけの部屋です。');
         $('#view-room').innerHTML = `
             <div class="card rounded-2xl p-6 relative overflow-hidden">
@@ -608,14 +629,28 @@
     }
     function renderMemoEdit(id){
         const m = id ? memos.find(x=>x.id===id && x.ownerId===session) : null;
+        const sel = m ? (m.tags||[]) : [];
+        const len = m ? (m.body||'').length : 0;
+        const pinned = m ? !!m.pinned : false;
+        memoEditPinned = pinned;
         $('#view-memo-edit').innerHTML = `${backBar('個室')}
             <div class="card rounded-2xl p-5 space-y-3">
-                <input type="text" id="memo-title" maxlength="80" class="input-field w-full px-3 py-2 rounded-md serif text-lg" placeholder="タイトル（無題でも可）" value="${m?esc(m.title):''}">
-                <textarea id="memo-body" rows="16" maxlength="40000" class="textarea-field w-full px-3 py-2 rounded-md serif resize-none" placeholder="ここに自由に書きましょう。">${m?esc(m.body):''}</textarea>
-                <div class="flex justify-between gap-2">
-                    ${m?`<button data-action="memo-del" data-id="${m.id}" class="btn-ghost px-4 py-2 rounded-md text-sm"><i class="fas fa-trash mr-1"></i>削除</button>`:'<span></span>'}
-                    <div class="flex gap-2"><button data-action="back" class="btn-ghost px-4 py-2 rounded-md text-sm">閉じる</button>
-                    <button data-action="memo-save" data-id="${m?m.id:''}" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">保存する</button></div>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="memo-title" maxlength="80" class="input-field flex-1 px-3 py-2 rounded-md serif text-lg" placeholder="タイトル（無題でも可）" value="${m?esc(m.title):''}">
+                    <button id="memo-pin-btn" data-action="memo-pin-toggle" class="w-10 h-10 rounded-md btn-ghost flex items-center justify-center flex-shrink-0" title="ピン留め" style="${pinned?'color:#fff;background:var(--accent-color);border-color:var(--accent-color)':''}"><i class="fa-${pinned?'solid':'regular'} fa-thumbtack"></i></button>
+                </div>
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">タグ</label>
+                    <div id="memo-tags" class="flex flex-wrap gap-2">${MEMO_TAGS.map(tg=>`<span class="chip ${sel.includes(tg)?'on':''}" data-action="memo-tag-toggle" data-tag="${tg}">${tg}</span>`).join('')}</div>
+                </div>
+                <textarea id="memo-body" rows="14" maxlength="${MEMO_MAX}" class="textarea-field w-full px-3 py-2 rounded-md serif resize-none" placeholder="ここに自由に書きましょう（${MEMO_MAX}字まで）。">${m?esc(m.body):''}</textarea>
+                <div class="flex items-center justify-between">
+                    <span id="memo-count" class="text-xs" style="color:var(--text-muted-color)">${len} / ${MEMO_MAX}</span>
+                    <div class="flex gap-2">
+                        ${m?`<button data-action="memo-copy" data-id="${m.id}" class="btn-ghost px-3 py-2 rounded-md text-sm"><i class="far fa-copy mr-1"></i>コピー</button>`:''}
+                        ${m?`<button data-action="memo-del" data-id="${m.id}" class="btn-ghost px-3 py-2 rounded-md text-sm"><i class="fas fa-trash mr-1"></i>削除</button>`:''}
+                        <button data-action="memo-save" data-id="${m?m.id:''}" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">保存する</button>
+                    </div>
                 </div>
             </div>`;
     }
@@ -1090,14 +1125,19 @@
             // 個室（作業部屋）
             case 'memo-new': renderMemoEdit(null); push('memo-edit', null); break;
             case 'open-memo': { renderMemoEdit(id); push('memo-edit', null); } break;
+            case 'memo-tag-toggle': { t.classList.toggle('on'); } break;
+            case 'memo-pin-toggle': { memoEditPinned=!memoEditPinned; const ic=t.querySelector('i'); if(ic)ic.className=`fa-${memoEditPinned?'solid':'regular'} fa-thumbtack`; if(memoEditPinned){ t.style.color='#fff'; t.style.background='var(--accent-color)'; t.style.borderColor='var(--accent-color)'; } else { t.style.color=''; t.style.background=''; t.style.borderColor=''; } } break;
             case 'memo-save': {
                 const title=$('#memo-title').value.trim(), body=$('#memo-body').value;
                 if(!title && !body.trim()){ toast('内容を入力してください'); break; }
-                if(id){ const m=memos.find(x=>x.id===id&&x.ownerId===session); if(m){ m.title=title; m.body=body; m.updatedAt=Date.now(); } }
-                else { memos.push({id:uid(),ownerId:session,title,body,createdAt:Date.now(),updatedAt:Date.now()}); }
+                const tags=$$('#memo-tags .chip.on').map(c=>c.dataset.tag);
+                if(id){ const m=memos.find(x=>x.id===id&&x.ownerId===session); if(m){ m.title=title; m.body=body; m.tags=tags; m.pinned=memoEditPinned; m.updatedAt=Date.now(); } }
+                else { memos.push({id:uid(),ownerId:session,title,body,tags,pinned:memoEditPinned,createdAt:Date.now(),updatedAt:Date.now()}); }
                 persist(); back(); renderRoom(); toast('保存しました');
             } break;
             case 'memo-del': if(confirm('この原稿を削除しますか？元に戻せません。')){ memos=memos.filter(x=>x.id!==id); persist(); back(); renderRoom(); toast('削除しました'); } break;
+            case 'memo-pin': { const m=memos.find(x=>x.id===id&&x.ownerId===session); if(!m)break; m.pinned=!m.pinned; persist(); renderRoom(); } break;
+            case 'memo-copy': { const m=memos.find(x=>x.id===id&&x.ownerId===session); if(!m)break; copyText((m.title?m.title+'\n\n':'')+(m.body||'')); } break;
             case 'lamp': {
                 const p=posts.find(x=>x.id===id); if(!p)break; p.lamps=p.lamps||[];
                 const i=p.lamps.indexOf(session), lit=i<0;
@@ -1219,6 +1259,7 @@
         if(e.target.id==='post-input'){ const c=$('#post-count'); if(c)c.textContent=`${e.target.value.length} / ${POST_MAX}`; }
         else if(e.target.id==='search-input'){ searchQuery=e.target.value; renderFeed(); }
         else if(e.target.id==='blog-search'){ blogSearch=e.target.value; blogPage=0; renderBlog(); }
+        else if(e.target.id==='memo-body'){ const c=$('#memo-count'); if(c)c.textContent=`${e.target.value.length} / ${MEMO_MAX}`; }
     });
 
     // ブログのソート・絞り込み（select）
