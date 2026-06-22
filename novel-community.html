@@ -158,6 +158,27 @@
         .fab { position: fixed; right: 1.25rem; bottom: 5.5rem; width: 3.5rem; height: 3.5rem; border-radius: 9999px; z-index: 30;
             display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
             box-shadow: 0 6px 16px -2px rgba(40,26,14,.5); }
+        /* 本を開く／閉じる演出 */
+        #book-stage { perspective: 1900px; }
+        #book-stage.fade-out { opacity: 0; transition: opacity .26s ease; }
+        .book3d-inner { position: absolute; top: 50%; left: 50%; width: 168px; height: 240px;
+            transform: translate(-50%,-50%) scale(1); transform-style: preserve-3d;
+            transition: transform .62s cubic-bezier(.4,.1,.3,1), opacity .5s ease .12s; }
+        .book3d-inner.zoom { transform: translate(-50%,-50%) scale(3.6); opacity: 0; }
+        .book3d-page { position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; background-color: var(--card-bg-color);
+            background-image: linear-gradient(90deg, rgba(40,26,14,.18), transparent 14%); border: 1px solid var(--border-color);
+            box-shadow: 0 14px 34px rgba(40,26,14,.5); }
+        .book3d-cover { position: absolute; inset: 0; transform-origin: left center; transform: rotateY(0deg);
+            transition: transform .62s cubic-bezier(.42,.04,.25,1); border-radius: 3px 8px 8px 3px;
+            display: flex; align-items: flex-start; justify-content: center; padding: 1.1rem .4rem; backface-visibility: hidden;
+            box-shadow: inset -10px 0 16px -8px rgba(0,0,0,.32), 0 6px 18px rgba(40,26,14,.4); }
+        .book3d-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 9px; background: rgba(0,0,0,.17);
+            border-radius: 3px 0 0 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.22); }
+        .book3d-title { writing-mode: vertical-rl; text-orientation: upright; font-size: 1.55rem; font-weight: 700; letter-spacing: .16em; }
+        /* 中の世界＝開いた本のページ */
+        main.in-book { border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);
+            background-color: rgba(243,234,210,.45);
+            box-shadow: inset 10px 0 20px -12px rgba(40,26,14,.5), inset -10px 0 20px -12px rgba(40,26,14,.36); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -371,6 +392,17 @@
             <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="settings"><i class="fas fa-gear nav-icon text-lg"></i><span class="text-[11px]">設定</span></button>
         </div>
     </nav>
+
+    <!-- 本を開く／閉じる演出のステージ -->
+    <div id="book-stage" class="fixed inset-0 z-50 hidden" style="background:rgba(40,26,14,.42)">
+        <div id="book3d-inner" class="book3d-inner">
+            <div class="book3d-page"></div>
+            <div id="book3d-cover" class="book3d-cover book-green">
+                <span class="book3d-spine"></span>
+                <span id="book3d-title" class="book3d-title serif"></span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-sm font-semibold text-white hidden text-center" style="background-color:var(--accent-color)"></div>
@@ -484,10 +516,38 @@
     let hist = [];
     function showView(id){ $$('.view').forEach(v=>v.classList.add('hidden')); const el=$('#view-'+id); if(el){ el.classList.remove('hidden'); el.classList.add('fade-in'); el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); } }
     function setNavActive(){ const root = hist[0] ? hist[0].view : 'home'; $$('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===root)); }
-    function navTo(view){ hist=[{view, render: TOP_RENDER[view]}]; showView(view); if(TOP_RENDER[view]) TOP_RENDER[view](); setNavActive(); window.scrollTo({top:0}); }
+    function navTo(view){ hist=[{view, render: TOP_RENDER[view]}]; showView(view); if(TOP_RENDER[view]) TOP_RENDER[view](); setNavActive(); window.scrollTo({top:0}); const m=$('main'); if(m) m.classList.toggle('in-book', view!=='home'); }
     function push(view, render){ hist.push({view, render}); showView(view); if(render) render(); setNavActive(); window.scrollTo({top:0}); }
     function back(){ if(hist.length>1){ hist.pop(); const c=hist[hist.length-1]; showView(c.view); if(c.render) c.render(); setNavActive(); window.scrollTo({top:0}); } else navTo('home'); }
     const backBar = label => `<button data-action="back" class="btn-ghost px-3 py-1.5 rounded-md text-sm"><i class="fas fa-arrow-left mr-1"></i>${label||'戻る'}</button>`;
+
+    // 本を開く／閉じる演出
+    const BOOK_META = { koryu:{c:'book-green',t:'交流'}, blog:{c:'book-blue',t:'ブログ'}, room:{c:'book-yellow',t:'個室'}, settings:{c:'book-gray',t:'設定'} };
+    let bookAnimating = false;
+    function animateBook(mode, view, done){
+        const meta = BOOK_META[view];
+        const stage = $('#book-stage');
+        if(!meta || !stage || bookAnimating){ done(); return; }
+        bookAnimating = true;
+        const cover = $('#book3d-cover'), title = $('#book3d-title'), inner = $('#book3d-inner');
+        cover.className = 'book3d-cover ' + meta.c; title.textContent = meta.t;
+        stage.classList.remove('hidden','fade-out');
+        if(mode === 'open'){
+            inner.classList.remove('zoom'); cover.style.transform = 'rotateY(0deg)';
+            void stage.offsetWidth;
+            requestAnimationFrame(()=>{ cover.style.transform = 'rotateY(-158deg)'; inner.classList.add('zoom'); });
+            setTimeout(done, 380);
+            setTimeout(()=> stage.classList.add('fade-out'), 540);
+            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 800);
+        } else { // close
+            inner.classList.remove('zoom'); cover.style.transform = 'rotateY(-158deg)';
+            void stage.offsetWidth;
+            requestAnimationFrame(()=>{ cover.style.transform = 'rotateY(0deg)'; });
+            setTimeout(done, 440);
+            setTimeout(()=> stage.classList.add('fade-out'), 600);
+            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 860);
+        }
+    }
 
     const TOP_RENDER = { home:renderHome, koryu:renderKoryu, blog:renderBlog, room:renderRoom, settings:renderSettings };
 
@@ -997,7 +1057,11 @@
         switch(a){
             case 'bell': push('notifications', renderNotifications); break;
             case 'back': back(); break;
-            case 'nav': navTo(t.dataset.view); break;
+            case 'nav': { const target=t.dataset.view, cur=hist[0]?hist[0].view:'home';
+                if(target===cur){ navTo(target); }
+                else if(target==='home'){ animateBook('close', cur, ()=>navTo('home')); }
+                else { animateBook('open', target, ()=>navTo(target)); }
+            } break;
             case 'logout': if(confirm('ログアウトしますか？')){ session=null; persist(); showAuth(); } break;
             case 'feedtab': feedTab=t.dataset.tab; renderKoryu(); break;
             case 'subpage': openSubpage(t.dataset.page); break;
