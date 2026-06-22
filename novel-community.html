@@ -126,6 +126,38 @@
         .lib-heading { border-left: 4px solid var(--accent-color); padding-left:.6rem; }
         /* スクロールバーも木の色味へ */
         ::-webkit-scrollbar-thumb { background: var(--shelf-edge); }
+        /* ホームの本棚 */
+        .bookshelf { position: relative; }
+        .book { position: relative; display: flex; height: 200px; border-radius: 3px 7px 7px 3px;
+            border: 1px solid rgba(40,26,14,.18); overflow: hidden; cursor: pointer;
+            box-shadow: 0 7px 14px -5px rgba(40,26,14,.4), inset -7px 0 12px -7px rgba(0,0,0,.3);
+            transition: transform .18s ease, box-shadow .2s ease; }
+        .book:hover { transform: translateY(-8px) rotate(-1deg); box-shadow: 0 14px 22px -6px rgba(40,26,14,.5), inset -7px 0 12px -7px rgba(0,0,0,.3); }
+        .book:active { transform: translateY(-3px); }
+        .book-spine { width: 9px; flex-shrink: 0; background: rgba(0,0,0,.16); box-shadow: inset -2px 0 3px rgba(0,0,0,.22), inset 2px 0 2px rgba(255,255,255,.15); }
+        .book-cover { flex: 1; display: flex; flex-direction: row-reverse; align-items: flex-start; justify-content: center; gap: .45rem; padding: 1rem .3rem; position: relative; }
+        .book-cover::after { content: ""; position: absolute; top: 4px; bottom: 4px; right: 0; width: 4px;
+            background: repeating-linear-gradient(180deg, #f3ecda 0 1px, #cbbd9c 1px 2.5px); }
+        .book-title, .book-sub { writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; }
+        .book-title { font-size: 1.3rem; font-weight: 700; letter-spacing: .14em; }
+        .book-sub { font-size: .64rem; letter-spacing: .22em; opacity: .8; }
+        @media (max-width: 380px){ .book{ height: 168px; } .book-title{ font-size:1.1rem; } }
+        .book-green  { background: linear-gradient(95deg,#d6e0c6,#c6d3b1); color:#46563a; }
+        .book-green  .book-spine{ background:#a7ba8d; }
+        .book-blue   { background: linear-gradient(95deg,#c9d7e1,#b6c8d6); color:#3d4f5c; }
+        .book-blue   .book-spine{ background:#8fa9bb; }
+        .book-yellow { background: linear-gradient(95deg,#e8ddb4,#dccd98); color:#6a5a2c; }
+        .book-yellow .book-spine{ background:#c4b073; }
+        .book-gray   { background: linear-gradient(95deg,#d6cfc4,#c5bcae); color:#4d463c; }
+        .book-gray   .book-spine{ background:#a99f90; }
+        .shelf-plank { height: 14px; margin-top: -2px; border-radius: 2px;
+            background-color: var(--header-bg-color);
+            background-image: linear-gradient(180deg, rgba(255,250,235,.45), rgba(90,62,36,.18)), repeating-linear-gradient(90deg, var(--wood-line) 0 2px, transparent 2px 11px);
+            border: 1px solid var(--shelf-edge); box-shadow: 0 5px 9px -3px rgba(40,26,14,.4); }
+        /* 投稿フォームのフローティングボタン（交流） */
+        .fab { position: fixed; right: 1.25rem; bottom: 5.5rem; width: 3.5rem; height: 3.5rem; border-radius: 9999px; z-index: 30;
+            display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+            box-shadow: 0 6px 16px -2px rgba(40,26,14,.5); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -215,21 +247,29 @@
                 <h2 id="home-greeting" class="serif text-2xl font-bold mt-1 relative"></h2>
                 <p class="text-sm mt-2 relative" style="color:var(--text-muted-color)">今日も、ことばを紡ぎましょう。</p>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <button class="card rounded-2xl p-5 text-left transition" data-action="nav" data-view="koryu">
-                    <i class="fas fa-comments text-2xl" style="color:var(--accent-color)"></i>
-                    <p class="font-bold mt-3">交流</p><p class="text-xs mt-1" style="color:var(--text-muted-color)">仲間とつながる</p></button>
-                <button class="card rounded-2xl p-5 text-left transition" data-action="nav" data-view="blog">
-                    <i class="fas fa-book-open text-2xl" style="color:var(--accent-color)"></i>
-                    <p class="font-bold mt-3">ブログ</p><p class="text-xs mt-1" style="color:var(--text-muted-color)">記事を読む・書く</p></button>
-                <button class="card rounded-2xl p-5 text-left transition" data-action="nav" data-view="settings">
-                    <i class="fas fa-gear text-2xl" style="color:var(--accent-color)"></i>
-                    <p class="font-bold mt-3">設定</p><p class="text-xs mt-1" style="color:var(--text-muted-color)">プロフィール・管理</p></button>
-                <div class="card rounded-2xl p-5">
-                    <i class="fas fa-feather-pointed text-2xl" style="color:var(--accent-color)"></i>
-                    <p class="font-bold mt-3"><span id="home-stat-posts">0</span> 投稿</p>
-                    <p class="text-xs mt-1" style="color:var(--text-muted-color)"><span id="home-stat-blogs">0</span> 記事 / <span id="home-stat-users">0</span> 人</p></div>
+            <p class="serif text-sm px-1" style="color:var(--text-muted-color)">本棚からえらぶ</p>
+            <div class="bookshelf">
+                <div class="grid grid-cols-4 gap-2 sm:gap-3 items-end">
+                    <button class="book book-green" data-action="nav" data-view="koryu">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">交流</span><span class="book-sub">仲間とつながる</span></span>
+                    </button>
+                    <button class="book book-blue" data-action="nav" data-view="blog">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">ブログ</span><span id="home-blog-sub" class="book-sub">記事を読む・書く</span></span>
+                    </button>
+                    <button class="book book-yellow" data-action="nav" data-view="room">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">個室</span><span class="book-sub">あなたの作業部屋</span></span>
+                    </button>
+                    <button class="book book-gray" data-action="nav" data-view="settings">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">設定</span><span class="book-sub">プロフィール・管理</span></span>
+                    </button>
+                </div>
+                <div class="shelf-plank"></div>
             </div>
+            <p class="text-xs text-center" style="color:var(--text-muted-color)"><i class="fas fa-feather-pointed mr-1"></i>蔵書 <span id="home-stat-posts">0</span> 投稿 ／ <span id="home-stat-blogs">0</span> 記事 ／ <span id="home-stat-users">0</span> 人</p>
         </section>
 
         <!-- 交流 -->
@@ -249,24 +289,34 @@
                     <button data-action="clear-search" class="btn-ghost px-3 py-1.5 rounded-md text-xs">クリア</button>
                 </div>
             </div>
-            <div class="card rounded-2xl p-4">
-                <textarea id="post-input" rows="3" maxlength="200" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="いま考えていること、執筆の進捗など…（200字まで）"></textarea>
-                <div class="flex justify-between items-center mt-2 gap-2">
-                    <span id="post-count" class="text-xs whitespace-nowrap" style="color:var(--text-muted-color)">0 / 200</span>
-                    <div class="flex items-center gap-2">
-                        <div class="relative">
-                            <button id="vis-btn" data-action="toggle-visibility" class="btn-ghost px-3 py-1.5 rounded-md text-sm font-semibold flex items-center whitespace-nowrap"><i class="fas fa-angle-down mr-1"></i>投稿先</button>
-                            <div id="vis-menu" class="hidden absolute right-0 top-full mt-2 w-60 card rounded-xl overflow-hidden z-30">
-                                <button data-action="set-visibility" data-vis="followers" class="vis-item"><i class="fas fa-user-group mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">フォロワーのみ</p><p class="text-xs" style="color:var(--text-muted-color)">あなたをフォローしている人だけに見えます</p></div></button>
-                                <button data-action="set-visibility" data-vis="public" class="vis-item"><i class="fas fa-globe mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">誰もが見える</p><p class="text-xs" style="color:var(--text-muted-color)">すべての利用者に見えます</p></div></button>
-                                <button data-action="set-visibility" data-vis="private" class="vis-item"><i class="fas fa-lock mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">自分だけ</p><p class="text-xs" style="color:var(--text-muted-color)">誰にも見えません（自分用のメモ）</p></div></button>
+            <div id="feed-list" class="space-y-4"></div>
+
+            <!-- 投稿フォーム（フローティングボタンで開く） -->
+            <button data-action="compose-open" class="fab btn-accent" title="投稿する"><i class="fas fa-feather-pointed"></i></button>
+            <div id="compose-modal" class="fixed inset-0 z-40 hidden">
+                <div class="absolute inset-0" style="background:rgba(40,26,14,.5)" data-action="compose-close"></div>
+                <div class="absolute left-1/2 -translate-x-1/2 top-16 w-[92%] max-w-lg card rounded-2xl p-4 fade-in">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="serif font-bold text-lg">いまの一筆</span>
+                        <button data-action="compose-close" class="w-8 h-8 rounded-full btn-ghost flex items-center justify-center" title="閉じる"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <textarea id="post-input" rows="4" maxlength="200" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="いま考えていること、執筆の進捗など…（200字まで）"></textarea>
+                    <div class="flex justify-between items-center mt-2 gap-2">
+                        <span id="post-count" class="text-xs whitespace-nowrap" style="color:var(--text-muted-color)">0 / 200</span>
+                        <div class="flex items-center gap-2">
+                            <div class="relative">
+                                <button id="vis-btn" data-action="toggle-visibility" class="btn-ghost px-3 py-1.5 rounded-md text-sm font-semibold flex items-center whitespace-nowrap"><i class="fas fa-angle-down mr-1"></i>投稿先</button>
+                                <div id="vis-menu" class="hidden absolute right-0 top-full mt-2 w-60 card rounded-xl overflow-hidden z-30">
+                                    <button data-action="set-visibility" data-vis="followers" class="vis-item"><i class="fas fa-user-group mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">フォロワーのみ</p><p class="text-xs" style="color:var(--text-muted-color)">あなたをフォローしている人だけに見えます</p></div></button>
+                                    <button data-action="set-visibility" data-vis="public" class="vis-item"><i class="fas fa-globe mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">誰もが見える</p><p class="text-xs" style="color:var(--text-muted-color)">すべての利用者に見えます</p></div></button>
+                                    <button data-action="set-visibility" data-vis="private" class="vis-item"><i class="fas fa-lock mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">自分だけ</p><p class="text-xs" style="color:var(--text-muted-color)">誰にも見えません（自分用のメモ）</p></div></button>
+                                </div>
                             </div>
+                            <button data-action="post" class="btn-accent px-4 py-1.5 rounded-md text-sm font-semibold">投稿</button>
                         </div>
-                        <button data-action="post" class="btn-accent px-4 py-1.5 rounded-md text-sm font-semibold">投稿</button>
                     </div>
                 </div>
             </div>
-            <div id="feed-list" class="space-y-4"></div>
         </section>
 
         <!-- ブログ -->
@@ -301,6 +351,10 @@
         <section id="view-notifications" class="view hidden space-y-4"></section>
         <section id="view-bookmarks" class="view hidden space-y-4"></section>
 
+        <!-- 個室（作業部屋） -->
+        <section id="view-room" class="view hidden space-y-4"></section>
+        <section id="view-memo-edit" class="view hidden space-y-4"></section>
+
         <!-- 設定トップ -->
         <section id="view-settings" class="view hidden space-y-4">
             <div class="card rounded-2xl overflow-hidden" id="settings-menu"></div>
@@ -330,7 +384,7 @@
    ========================================================= */
 (function () {
     'use strict';
-    const KEYS = { users:'fudebi_users', session:'fudebi_session', posts:'fudebi_posts', blogs:'fudebi_blogs', notifs:'fudebi_notifs', reports:'fudebi_reports', feedbacks:'fudebi_feedbacks', banned:'fudebi_banned' };
+    const KEYS = { users:'fudebi_users', session:'fudebi_session', posts:'fudebi_posts', blogs:'fudebi_blogs', notifs:'fudebi_notifs', reports:'fudebi_reports', feedbacks:'fudebi_feedbacks', banned:'fudebi_banned', memos:'fudebi_memos' };
     const GENRES = ['恋愛','ファンタジー','SF','ミステリ','ホラー','時代・歴史','現代ドラマ','エッセイ','詩・短歌','ライト文芸','二次創作','BL','GL','ノンフィクション'];
     const LINK_PRESETS = ['カクヨム','小説家になろう','pixiv','X (Twitter)','note','個人サイト'];
 
@@ -344,6 +398,7 @@
     let reports   = load(KEYS.reports, []);
     let feedbacks = load(KEYS.feedbacks, []);
     let banned    = load(KEYS.banned, []);   // BANされたメールアドレス一覧
+    let memos     = load(KEYS.memos, []);    // 個室（作業部屋）のメモ
     let session   = load(KEYS.session, null);
 
     // 旧データの補完
@@ -366,7 +421,7 @@
         if (!b.updatedAt) b.updatedAt = b.createdAt;
     });
 
-    const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.session, session); };
+    const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.memos, memos); save(KEYS.session, session); };
 
     const $  = (s, el=document) => el.querySelector(s);
     const $$ = (s, el=document) => [...el.querySelectorAll(s)];
@@ -425,7 +480,7 @@
     function updateBell(){ const n=myUnread(); const b=$('#bell-badge'); if(n>0){ b.textContent=n>99?'99+':n; b.classList.remove('hidden'); } else b.classList.add('hidden'); }
 
     // ================= ナビゲーション =================
-    const TOP_VIEWS = ['home','koryu','blog','settings'];
+    const TOP_VIEWS = ['home','koryu','blog','room','settings'];
     let hist = [];
     function showView(id){ $$('.view').forEach(v=>v.classList.add('hidden')); const el=$('#view-'+id); if(el){ el.classList.remove('hidden'); el.classList.add('fade-in'); el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); } }
     function setNavActive(){ const root = hist[0] ? hist[0].view : 'home'; $$('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===root)); }
@@ -434,7 +489,7 @@
     function back(){ if(hist.length>1){ hist.pop(); const c=hist[hist.length-1]; showView(c.view); if(c.render) c.render(); setNavActive(); window.scrollTo({top:0}); } else navTo('home'); }
     const backBar = label => `<button data-action="back" class="btn-ghost px-3 py-1.5 rounded-md text-sm"><i class="fas fa-arrow-left mr-1"></i>${label||'戻る'}</button>`;
 
-    const TOP_RENDER = { home:renderHome, koryu:renderKoryu, blog:renderBlog, settings:renderSettings };
+    const TOP_RENDER = { home:renderHome, koryu:renderKoryu, blog:renderBlog, room:renderRoom, settings:renderSettings };
 
     // ================= 認証 =================
     function showAuth(){ $('#auth-screen').classList.remove('hidden'); $('#app-screen').classList.add('hidden'); }
@@ -468,7 +523,42 @@
 
     // ================= ヘッダー / ホーム =================
     function renderHeader(){ $('#header-avatar').innerHTML = `<div data-action="nav" data-view="settings" style="cursor:pointer" title="設定">${avatar(me(),'w-9 h-9 text-sm',false)}</div>`; }
-    function renderHome(){ const u=me(); if(!u)return; $('#home-greeting').textContent=u.penname+' さん'; $('#home-stat-posts').textContent=posts.length; $('#home-stat-blogs').textContent=blogs.length; $('#home-stat-users').textContent=users.length; }
+    function renderHome(){ const u=me(); if(!u)return; $('#home-greeting').textContent=u.penname+' さん'; $('#home-stat-posts').textContent=posts.length; $('#home-stat-blogs').textContent=blogs.length; $('#home-stat-users').textContent=users.length;
+        const bs=$('#home-blog-sub'); if(bs) bs.textContent = canWriteBlog(u) ? '記事を読む・書く' : '記事を読む'; }
+
+    // ================= 個室（作業部屋） =================
+    function myMemos(){ return memos.filter(m=>m.ownerId===session).sort((a,b)=>b.updatedAt-a.updatedAt); }
+    function renderRoom(){
+        const mine=myMemos();
+        const list = mine.length ? mine.map(m=>{
+            const prev=(m.body||'').replace(/\s+/g,' ').slice(0,70);
+            return `<button data-action="open-memo" data-id="${m.id}" class="card rounded-2xl p-4 w-full text-left transition fade-in">
+                <div class="flex items-center gap-2"><i class="fas fa-pen-to-square" style="color:var(--accent-color)"></i><span class="serif font-bold flex-1 truncate">${esc(m.title||'無題')}</span><span class="text-[11px]" style="color:var(--text-muted-color)">${timeAgo(m.updatedAt)}</span></div>
+                ${prev?`<p class="text-sm mt-2" style="color:var(--text-muted-color)">${esc(prev)}${(m.body||'').length>70?'…':''}</p>`:''}
+            </button>`; }).join('')
+            : emptyState('fa-mug-hot','まだ何もありません','「新しい原稿」から、下書きやメモを自由に書けます。誰にも見えない、あなただけの部屋です。');
+        $('#view-room').innerHTML = `
+            <div class="card rounded-2xl p-6 relative overflow-hidden">
+                <p class="text-sm" style="color:var(--text-muted-color)"><i class="fas fa-door-closed mr-1"></i>個室</p>
+                <h2 class="serif text-2xl font-bold mt-1">あなたの作業部屋</h2>
+                <p class="text-sm mt-2" style="color:var(--text-muted-color)">下書き・構想・覚え書き。ここに記したものは、誰にも公開されません。</p>
+            </div>
+            <button data-action="memo-new" class="btn-accent w-full py-2.5 rounded-md font-semibold"><i class="fas fa-feather-pointed mr-2"></i>新しい原稿</button>
+            <div class="space-y-3">${list}</div>`;
+    }
+    function renderMemoEdit(id){
+        const m = id ? memos.find(x=>x.id===id && x.ownerId===session) : null;
+        $('#view-memo-edit').innerHTML = `${backBar('個室')}
+            <div class="card rounded-2xl p-5 space-y-3">
+                <input type="text" id="memo-title" maxlength="80" class="input-field w-full px-3 py-2 rounded-md serif text-lg" placeholder="タイトル（無題でも可）" value="${m?esc(m.title):''}">
+                <textarea id="memo-body" rows="16" maxlength="40000" class="textarea-field w-full px-3 py-2 rounded-md serif resize-none" placeholder="ここに自由に書きましょう。">${m?esc(m.body):''}</textarea>
+                <div class="flex justify-between gap-2">
+                    ${m?`<button data-action="memo-del" data-id="${m.id}" class="btn-ghost px-4 py-2 rounded-md text-sm"><i class="fas fa-trash mr-1"></i>削除</button>`:'<span></span>'}
+                    <div class="flex gap-2"><button data-action="back" class="btn-ghost px-4 py-2 rounded-md text-sm">閉じる</button>
+                    <button data-action="memo-save" data-id="${m?m.id:''}" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">保存する</button></div>
+                </div>
+            </div>`;
+    }
 
     // ================= 交流（SNS） =================
     const FOLD = 100;          // この文字数を超えたら折りたたむ
@@ -918,6 +1008,8 @@
             case 'show-bookmarks': push('bookmarks', renderBookmarks); break;
             case 'jump-post': { feedTab='all'; searchQuery=''; searchOpen=false; navTo('koryu'); const pid=id; setTimeout(()=>{ const el=document.getElementById('post-'+pid); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('post-highlight'); setTimeout(()=>el.classList.remove('post-highlight'),2200); } },80); } break;
 
+            case 'compose-open': { const md=$('#compose-modal'); if(md){ md.classList.remove('hidden'); composeVis=null; updateComposeUI(); const ta=$('#post-input'); if(ta){ const c=$('#post-count'); if(c)c.textContent=`${ta.value.length} / ${POST_MAX}`; setTimeout(()=>ta.focus(),30); } } } break;
+            case 'compose-close': { const md=$('#compose-modal'); if(md)md.classList.add('hidden'); const vm=$('#vis-menu'); if(vm)vm.classList.add('hidden'); } break;
             case 'toggle-visibility': { const m=$('#vis-menu'); if(m)m.classList.toggle('hidden'); } break;
             case 'set-visibility': { composeVis=t.dataset.vis; updateComposeUI(); const m=$('#vis-menu'); if(m)m.classList.add('hidden'); } break;
             case 'post': {
@@ -926,9 +1018,22 @@
                 posts.unshift({id:uid(),authorId:session,body,visibility:composeVis,createdAt:Date.now(),lamps:[],comments:[],bookmarks:[]});
                 ta.value=''; const c=$('#post-count'); if(c)c.textContent=`0 / ${POST_MAX}`;
                 composeVis=null; updateComposeUI(); persist(); renderFeed();
+                const md=$('#compose-modal'); if(md)md.classList.add('hidden');
                 toast('投稿しました');
             } break;
             case 'del-post': if(confirm('この投稿を削除しますか？')){ posts=posts.filter(x=>x.id!==id); persist(); const cur=hist[hist.length-1]; if(cur&&cur.render)cur.render(); } break;
+
+            // 個室（作業部屋）
+            case 'memo-new': renderMemoEdit(null); push('memo-edit', null); break;
+            case 'open-memo': { renderMemoEdit(id); push('memo-edit', null); } break;
+            case 'memo-save': {
+                const title=$('#memo-title').value.trim(), body=$('#memo-body').value;
+                if(!title && !body.trim()){ toast('内容を入力してください'); break; }
+                if(id){ const m=memos.find(x=>x.id===id&&x.ownerId===session); if(m){ m.title=title; m.body=body; m.updatedAt=Date.now(); } }
+                else { memos.push({id:uid(),ownerId:session,title,body,createdAt:Date.now(),updatedAt:Date.now()}); }
+                persist(); back(); renderRoom(); toast('保存しました');
+            } break;
+            case 'memo-del': if(confirm('この原稿を削除しますか？元に戻せません。')){ memos=memos.filter(x=>x.id!==id); persist(); back(); renderRoom(); toast('削除しました'); } break;
             case 'lamp': {
                 const p=posts.find(x=>x.id===id); if(!p)break; p.lamps=p.lamps||[];
                 const i=p.lamps.indexOf(session), lit=i<0;
@@ -1002,6 +1107,7 @@
                 const myId=u.id; users=users.filter(x=>x.id!==myId);
                 users.forEach(o=>{ o.following=o.following.filter(x=>x!==myId); o.followers=o.followers.filter(x=>x!==myId); o.blocked=o.blocked.filter(x=>x!==myId); });
                 notifs=notifs.filter(n=>n.toId!==myId&&n.fromId!==myId);
+                memos=memos.filter(m=>m.ownerId!==myId);
                 session=null; persist(); showAuth(); toast('退会しました');
             } break;
 
@@ -1024,11 +1130,12 @@
                 const mid=m.id; users=users.filter(x=>x.id!==mid);
                 users.forEach(o=>{ o.following=o.following.filter(x=>x!==mid); o.followers=o.followers.filter(x=>x!==mid); o.blocked=o.blocked.filter(x=>x!==mid); });
                 notifs=notifs.filter(n=>n.toId!==mid&&n.fromId!==mid);
+                memos=memos.filter(x=>x.ownerId!==mid);
                 persist(); renderMemberList(); renderBlog(); renderFeed(); renderHome(); toast(`${m.penname} さんをBANしました`);
             } break;
 
             // データ
-            case 'export': { const data={users,posts,blogs,notifs,reports,feedbacks,banned,exportedAt:new Date().toISOString()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fudebi-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); } break;
+            case 'export': { const data={users,posts,blogs,notifs,reports,feedbacks,banned,memos,exportedAt:new Date().toISOString()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fudebi-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); } break;
         }
     });
 
@@ -1088,7 +1195,7 @@
         const file=e.target.files[0]; if(!file)return;
         const reader=new FileReader();
         reader.onload=()=>{ try{ const d=JSON.parse(reader.result); if(!Array.isArray(d.users))throw new Error('形式が不正です'); if(!confirm('現在のデータを上書きしてインポートします。よろしいですか？'))return;
-            users=d.users; posts=d.posts||[]; blogs=d.blogs||[]; notifs=d.notifs||[]; reports=d.reports||[]; feedbacks=d.feedbacks||[]; banned=d.banned||[];
+            users=d.users; posts=d.posts||[]; blogs=d.blogs||[]; notifs=d.notifs||[]; reports=d.reports||[]; feedbacks=d.feedbacks||[]; banned=d.banned||[]; memos=d.memos||[];
             users.forEach(x=>{ x.following=x.following||[]; x.followers=x.followers||[]; x.blocked=x.blocked||[]; x.genres=x.genres||[]; x.links=x.links||[]; x.muteWords=x.muteWords||[]; if(x.blogComments===undefined)x.blogComments=true; });
             posts.forEach(x=>{ x.lamps=x.lamps||x.likes||[]; x.bookmarks=x.bookmarks||[]; x.comments=x.comments||[]; if(!x.visibility)x.visibility='public'; });
             if(!users.some(x=>x.id===session))session=null; persist();
