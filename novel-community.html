@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>筆置 - 小説家の交流サイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 古い書庫の趣：木の棚・革の背表紙・日に焼けた紙（単一テーマ） */
+        :root {
+            --bg-color: #e4d6b6;        /* 日に焼けた古紙 */
+            --card-bg-color: #f3ead2;   /* 生成りの紙色 */
+            --border-color: #bfa67a;    /* くすんだ亜麻色 */
+            --text-color: #3c2a1b;      /* 焦茶のインク */
+            --text-muted-color: #7c6549;/* セピア */
+            --accent-color: #7a4a2a;    /* 革表紙の茶 */
+            --accent-hover-color: #5d3720;
+            --accent-soft-color: rgba(122,74,42,0.13);
+            --danger-color: #9e4329;    /* 弁柄色 */
+            --danger-hover-color: #7f341f;
+            --header-bg-color: #d8c49b; /* 書棚の木肌 */
+            --wood-line: rgba(90,62,36,.07);
+            --shelf-edge: #a98c5d;
+        }
+        body {
+            font-family: 'Inter','Noto Sans JP',sans-serif; color: var(--text-color);
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 18% 8%, rgba(255,250,235,.35), transparent 42%),
+                radial-gradient(circle at 85% 92%, rgba(60,42,27,.07), transparent 48%),
+                repeating-linear-gradient(0deg, rgba(120,90,60,.022) 0px, rgba(120,90,60,.022) 1px, transparent 1px, transparent 4px);
+            background-attachment: fixed;
+        }
+        .serif { font-family: 'Noto Serif JP', serif; }
+        .card {
+            background-color: var(--card-bg-color);
+            background-image: linear-gradient(180deg, rgba(255,252,242,.5), rgba(255,252,242,0) 55%);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 10px -3px rgba(60,40,20,.18), 0 2px 4px -2px rgba(60,40,20,.12), inset 0 0 0 1px rgba(255,250,235,.35);
+            transition: background-color .3s, border-color .3s, box-shadow .2s;
+        }
+        /* 書棚の棚板（ヘッダー・ボトムナビ） */
+        .lib-shelf {
+            background-color: var(--header-bg-color);
+            background-image:
+                linear-gradient(180deg, rgba(255,250,235,.4), rgba(90,62,36,.10)),
+                repeating-linear-gradient(90deg, var(--wood-line) 0 2px, transparent 2px 11px);
+        }
+        .lib-shelf-top { border-bottom: 2px solid var(--shelf-edge) !important; box-shadow: 0 4px 8px rgba(60,40,20,.20); }
+        .lib-shelf-bottom { border-top: 2px solid var(--shelf-edge) !important; box-shadow: 0 -4px 8px rgba(60,40,20,.20); }
+        .btn-accent { background-color: var(--accent-color); color:#fff; transition: background-color .2s, transform .1s; box-shadow: 0 2px 4px rgba(0,0,0,.15); }
+        .btn-accent:hover { background-color: var(--accent-hover-color); }
+        .btn-accent:active { transform: translateY(1px); }
+        .btn-ghost { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-color); transition: background-color .2s, border-color .2s; }
+        .btn-ghost:hover { background-color: var(--accent-soft-color); border-color: var(--accent-color); }
+        .btn-danger { background-color: var(--danger-color); color:#fff; transition: background-color .2s; }
+        .btn-danger:hover { background-color: var(--danger-hover-color); }
+        .input-field, .textarea-field { background-color: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); transition: border-color .2s; }
+        .input-field:focus, .textarea-field:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 2px var(--accent-soft-color); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .nav-btn { color: var(--text-muted-color); transition: color .2s; }
+        .nav-btn.active { color: var(--accent-color); }
+        .nav-btn.active .nav-icon { transform: translateY(-2px); }
+        .nav-icon { transition: transform .2s; }
+        @keyframes fadeIn { from {opacity:0; transform: translateY(8px);} to {opacity:1; transform: none;} }
+        .fade-in { animation: fadeIn .35s ease-out forwards; }
+        .badge { font-size:.65rem; padding:.1rem .45rem; border-radius:9999px; font-weight:600; }
+        .badge-admin { background:#b58a2e; color:#fff; }
+        .badge-author { background: var(--accent-color); color:#fff; }
+        /* Tailwindの原色をアースカラーへ寄せる */
+        .text-rose-400 { color: var(--danger-color) !important; }
+        .text-amber-400 { color: #b58a2e !important; }
+        .text-emerald-400 { color: #5c7a3f !important; }
+        .avatar { display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; flex-shrink:0; }
+        .blog-body { white-space: pre-wrap; line-height: 1.9; }
+        .chip { border:1px solid var(--border-color); color:var(--text-muted-color); border-radius:9999px; padding:.25rem .7rem; font-size:.78rem; cursor:pointer; transition: all .15s; user-select:none; }
+        .chip.on { background: var(--accent-color); color:#fff; border-color: var(--accent-color); }
+        .menu-row { display:flex; align-items:center; gap:.9rem; padding:.95rem 1rem; cursor:pointer; transition: background-color .15s; }
+        .menu-row:hover { background: var(--accent-soft-color); }
+        .menu-row + .menu-row { border-top: 1px solid var(--border-color); }
+        .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 10rem) !important; }
+        .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+        a.exlink { color: var(--accent-color); }
+        .fold-btn { color: var(--accent-color); font-size:.8rem; font-weight:600; margin-left:.25rem; cursor:pointer; }
+        .post-highlight { box-shadow: 0 0 0 2px var(--accent-color), 0 4px 6px -1px rgba(0,0,0,.08) !important; transition: box-shadow .4s; }
+        .vis-item { display:flex; align-items:flex-start; gap:.6rem; width:100%; text-align:left; padding:.75rem 1rem; transition: background-color .15s; }
+        .vis-item:hover { background: var(--accent-soft-color); }
+        .vis-item + .vis-item { border-top:1px solid var(--border-color); }
+        .vis-item.on { background: var(--accent-soft-color); }
+        /* 観葉植物の装飾（モンステラ・ポトス） */
+        #auth-screen, #app-screen { position: relative; z-index: 1; }
+        .plant-deco { position: fixed; z-index: 0; pointer-events: none; opacity: .15; }
+        .plant-tr { top: 3.4rem; right: -1.6rem; width: 150px; transform: scaleX(-1); }
+        .plant-bl { bottom: -1.2rem; left: -1.8rem; width: 170px; }
+        @media (max-width: 640px){ .plant-tr{ width: 96px; top: 3.4rem; } .plant-bl{ width: 110px; } }
+        .leaf-accent { display:inline-block; vertical-align:middle; opacity:.8; }
+        /* リッチエディタ & ブログ本文 */
+        .rt-toolbar { display:flex; flex-wrap:wrap; gap:.3rem; }
+        .rt-btn { min-width:2.2rem; height:2.2rem; padding:0 .5rem; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--border-color); border-radius:.45rem; background:var(--bg-color); color:var(--text-color); cursor:pointer; font-size:.85rem; transition: all .15s; }
+        .rt-btn:hover { background:var(--accent-soft-color); border-color:var(--accent-color); }
+        .rt-btn.active { background:var(--accent-color); color:#fff; border-color:var(--accent-hover-color); border-width:2px; box-shadow: inset 0 2px 4px rgba(0,0,0,.3); }
+        .rt-editor { min-height:340px; line-height:1.9; }
+        .rt-editor:focus { outline:none; }
+        .rt-editor:empty:before { content: attr(data-placeholder); color: var(--text-muted-color); }
+        .rt-editor h2, .blog-body.rich h2 { font-size:1.45rem; font-weight:700; margin:1.1em 0 .45em; line-height:1.4; }
+        .rt-editor h3, .blog-body.rich h3 { font-size:1.18rem; font-weight:700; margin:.9em 0 .35em; line-height:1.4; }
+        .rt-editor ul, .blog-body.rich ul { list-style: disc; padding-left:1.6em; margin:.6em 0; }
+        .rt-editor ol, .blog-body.rich ol { list-style: decimal; padding-left:1.6em; margin:.6em 0; }
+        .rt-editor li, .blog-body.rich li { margin:.2em 0; }
+        .rt-editor p, .blog-body.rich p { margin:.6em 0; }
+        .rt-editor u, .blog-body.rich u { text-decoration: underline; }
+        .blog-body.rich { white-space: normal; }
+        .blog-tag { display:inline-block; font-size:.7rem; padding:.12rem .6rem; border-radius:3px; background:rgba(122,74,42,.08); border:1px solid var(--border-color); color:var(--accent-color); }
+        /* 書庫らしい細部 */
+        h1, h2, h3 { letter-spacing:.02em; }
+        .blog-body.serif, .rt-editor.serif { letter-spacing:.012em; }
+        .avatar { box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), 0 1px 2px rgba(40,26,14,.25); }
+        button.card { transition: transform .15s, box-shadow .2s, background-color .3s, border-color .3s; }
+        button.card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -4px rgba(60,40,20,.26), inset 0 0 0 1px rgba(255,250,235,.4); border-color: var(--accent-color); }
+        .chip { background: rgba(255,252,242,.4); }
+        /* 蔵書ラベル風の見出し（左に革色の罫） */
+        .lib-heading { border-left: 4px solid var(--accent-color); padding-left:.6rem; }
+        /* スクロールバーも木の色味へ */
+        ::-webkit-scrollbar-thumb { background: var(--shelf-edge); }
+        /* ホームの本棚 */
+        .bookshelf { position: relative; }
+        .book { position: relative; display: flex; height: 200px; border-radius: 3px 7px 7px 3px;
+            border: 1px solid rgba(40,26,14,.18); overflow: hidden; cursor: pointer;
+            box-shadow: 0 7px 14px -5px rgba(40,26,14,.4), inset -7px 0 12px -7px rgba(0,0,0,.3);
+            transition: transform .18s ease, box-shadow .2s ease; }
+        .book:hover { transform: translateY(-8px) rotate(-1deg); box-shadow: 0 14px 22px -6px rgba(40,26,14,.5), inset -7px 0 12px -7px rgba(0,0,0,.3); }
+        .book:active { transform: translateY(-3px); }
+        .book-spine { width: 9px; flex-shrink: 0; background: rgba(0,0,0,.16); box-shadow: inset -2px 0 3px rgba(0,0,0,.22), inset 2px 0 2px rgba(255,255,255,.15); }
+        .book-cover { flex: 1; display: flex; flex-direction: row-reverse; align-items: flex-start; justify-content: center; gap: .45rem; padding: 1rem .3rem; position: relative; }
+        .book-cover::after { content: ""; position: absolute; top: 4px; bottom: 4px; right: 0; width: 4px;
+            background: repeating-linear-gradient(180deg, #f3ecda 0 1px, #cbbd9c 1px 2.5px); }
+        .book-title, .book-sub { writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; }
+        .book-title { font-size: 1.3rem; font-weight: 700; letter-spacing: .14em; }
+        .book-sub { font-size: .64rem; letter-spacing: .22em; opacity: .8; }
+        @media (max-width: 380px){ .book{ height: 168px; } .book-title{ font-size:1.1rem; } }
+        .book-green  { background: linear-gradient(95deg,#d6e0c6,#c6d3b1); color:#46563a; }
+        .book-green  .book-spine{ background:#a7ba8d; }
+        .book-blue   { background: linear-gradient(95deg,#c9d7e1,#b6c8d6); color:#3d4f5c; }
+        .book-blue   .book-spine{ background:#8fa9bb; }
+        .book-yellow { background: linear-gradient(95deg,#e8ddb4,#dccd98); color:#6a5a2c; }
+        .book-yellow .book-spine{ background:#c4b073; }
+        .book-gray   { background: linear-gradient(95deg,#d6cfc4,#c5bcae); color:#4d463c; }
+        .book-gray   .book-spine{ background:#a99f90; }
+        .shelf-plank { height: 14px; margin-top: -2px; border-radius: 2px;
+            background-color: var(--header-bg-color);
+            background-image: linear-gradient(180deg, rgba(255,250,235,.45), rgba(90,62,36,.18)), repeating-linear-gradient(90deg, var(--wood-line) 0 2px, transparent 2px 11px);
+            border: 1px solid var(--shelf-edge); box-shadow: 0 5px 9px -3px rgba(40,26,14,.4); }
+        /* 投稿フォームのフローティングボタン（交流） */
+        .fab { position: fixed; right: 1.25rem; bottom: 5.5rem; width: 3.5rem; height: 3.5rem; border-radius: 9999px; z-index: 30;
+            display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+            box-shadow: 0 6px 16px -2px rgba(40,26,14,.5); }
+        /* 本を開く／閉じる演出 */
+        #book-stage { perspective: 1900px; }
+        #book-stage.fade-out { opacity: 0; transition: opacity .26s ease; }
+        .book3d-inner { position: absolute; top: 50%; left: 50%; width: 168px; height: 240px;
+            transform: translate(-50%,-50%) scale(1); transform-style: preserve-3d;
+            transition: transform .8s cubic-bezier(.4,.1,.3,1), opacity .62s ease .16s; }
+        .book3d-inner.zoom { transform: translate(-50%,-50%) scale(3.6); opacity: 0; }
+        .book3d-page { position: absolute; inset: 0; border-radius: 3px 8px 8px 3px; background-color: var(--card-bg-color);
+            background-image: linear-gradient(90deg, rgba(40,26,14,.18), transparent 14%); border: 1px solid var(--border-color);
+            box-shadow: 0 14px 34px rgba(40,26,14,.5); }
+        .book3d-cover { position: absolute; inset: 0; transform-origin: left center; transform: rotateY(0deg);
+            transition: transform .8s cubic-bezier(.42,.04,.25,1); border-radius: 3px 8px 8px 3px;
+            display: flex; align-items: flex-start; justify-content: center; padding: 1.1rem .4rem; backface-visibility: hidden;
+            box-shadow: inset -10px 0 16px -8px rgba(0,0,0,.32), 0 6px 18px rgba(40,26,14,.4); }
+        .book3d-spine { position: absolute; left: 0; top: 0; bottom: 0; width: 9px; background: rgba(0,0,0,.17);
+            border-radius: 3px 0 0 3px; box-shadow: inset -2px 0 3px rgba(0,0,0,.22); }
+        .book3d-title { writing-mode: vertical-rl; text-orientation: upright; font-size: 1.55rem; font-weight: 700; letter-spacing: .16em; }
+        /* 中の世界＝開いた本のページ */
+        main.in-book { border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);
+            background-color: rgba(243,234,210,.45);
+            box-shadow: inset 10px 0 20px -12px rgba(40,26,14,.5), inset -10px 0 20px -12px rgba(40,26,14,.36); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ 観葉植物の装飾 ============ -->
+<!-- 右上から垂れるポトスのつる -->
+<svg class="plant-deco plant-tr" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M118 0 C116 34 92 46 98 80 C103 108 78 120 84 156 C88 178 74 188 70 200" fill="none" stroke="#4e6b3a" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#6f8f4a">
+        <path d="M118 14 C108 4 90 10 94 26 C97 38 110 44 124 46 C130 34 132 20 124 12 C122 10 120 12 118 14 Z"/>
+        <path d="M100 60 C88 54 74 64 82 78 C88 88 102 90 116 88 C118 74 114 60 104 56 C102 56 101 58 100 60 Z"/>
+        <path d="M96 116 C108 108 124 116 118 132 C113 144 99 146 86 142 C84 128 88 116 96 116 Z"/>
+        <path d="M82 158 C70 152 56 162 64 176 C70 186 84 188 98 186 C100 172 96 158 86 154 C84 154 83 156 82 158 Z"/>
+    </g>
+</svg>
+<!-- 左下のモンステラ -->
+<svg class="plant-deco plant-bl" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g stroke="#3f5730" stroke-width="4" stroke-linecap="round" fill="none">
+        <path d="M70 200 C66 168 70 150 84 132"/>
+        <path d="M120 200 C124 170 118 150 104 130"/>
+    </g>
+    <path fill="#5c7a3f" fill-rule="evenodd" d="M58 138 C22 134 6 104 12 78 C16 58 36 40 58 38 C80 40 100 58 104 78 C110 104 94 134 58 138 Z M58 56 C50 70 50 94 58 112 C66 94 66 70 58 56 Z M30 74 C38 78 44 86 46 98 C36 96 28 88 26 78 Z M86 74 C78 78 72 86 70 98 C80 96 88 88 90 78 Z M34 106 C42 108 48 114 50 124 C40 122 34 116 32 108 Z M82 106 C74 108 68 114 66 124 C76 122 82 116 84 108 Z"/>
+    <path fill="#6f8f4a" fill-rule="evenodd" d="M132 170 C104 167 92 144 96 124 C99 108 114 95 132 93 C150 95 165 108 168 124 C172 144 160 167 132 170 Z M132 107 C126 118 126 136 132 150 C138 136 138 118 132 107 Z M112 121 C118 124 122 130 124 139 C116 137 110 131 109 123 Z M152 121 C146 124 142 130 140 139 C148 137 154 131 155 123 Z"/>
+</svg>
+
+<!-- ============ 認証画面 ============ -->
+<div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="serif text-4xl font-bold tracking-widest inline-flex items-center justify-center gap-2" style="color:var(--accent-color)">
+                <svg viewBox="0 0 120 150" class="w-7 h-9" style="opacity:.85" aria-hidden="true"><path fill="#5c7a3f" fill-rule="evenodd" d="M58 104 C22 100 6 70 12 44 C16 24 36 6 58 4 C80 6 100 24 104 44 C110 70 94 100 58 104 Z M58 22 C50 36 50 60 58 78 C66 60 66 36 58 22 Z M30 40 C38 44 44 52 46 64 C36 62 28 54 26 44 Z M86 40 C78 44 72 52 70 64 C80 62 88 54 90 44 Z M34 72 C42 74 48 80 50 90 C40 88 34 82 32 74 Z M82 72 C74 74 68 80 66 90 C76 88 82 82 84 74 Z"/></svg>
+                筆置<span class="text-base align-top">ふでおき</span></h1>
+            <p class="text-sm mt-2" style="color:var(--text-muted-color)">小説家のための、静かな交流の場</p>
+        </div>
+        <div class="card rounded-2xl p-6 fade-in">
+            <div class="flex mb-6 rounded-lg overflow-hidden border" style="border-color:var(--border-color)">
+                <button id="tab-login" class="flex-1 py-2 text-sm font-semibold btn-accent">ログイン</button>
+                <button id="tab-register" class="flex-1 py-2 text-sm font-semibold btn-ghost border-0">新規登録</button>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">メールアドレス</label>
+                    <input type="email" id="login-email" required class="input-field w-full px-3 py-2 rounded-md" placeholder="you@example.com"></div>
+                <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">パスワード</label>
+                    <input type="password" id="login-password" required class="input-field w-full px-3 py-2 rounded-md" placeholder="••••••••"></div>
+                <p id="login-error" class="text-xs text-rose-400 hidden"></p>
+                <button type="submit" class="btn-accent w-full py-2.5 rounded-md font-semibold">ログイン</button>
+                <p class="text-[11px] text-center" style="color:var(--text-muted-color)">パスワードをお忘れの場合の再設定（メール送信）は、本番版で対応予定です。</p>
+            </form>
+            <form id="register-form" class="space-y-4 hidden">
+                <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">ペンネーム</label>
+                    <input type="text" id="reg-penname" required maxlength="24" class="input-field w-full px-3 py-2 rounded-md" placeholder="例：夜長 灯"></div>
+                <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">メールアドレス <span class="text-rose-400">*必須</span></label>
+                    <input type="email" id="reg-email" required class="input-field w-full px-3 py-2 rounded-md" placeholder="you@example.com"></div>
+                <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">パスワード（6文字以上）</label>
+                    <input type="password" id="reg-password" required minlength="6" class="input-field w-full px-3 py-2 rounded-md" placeholder="••••••••"></div>
+                <p id="reg-error" class="text-xs text-rose-400 hidden"></p>
+                <button type="submit" class="btn-accent w-full py-2.5 rounded-md font-semibold">登録してはじめる</button>
+            </form>
+        </div>
+        <p class="text-[11px] text-center mt-4 leading-relaxed" style="color:var(--text-muted-color)">
+            <i class="fas fa-circle-info mr-1"></i>これは試作版です。アカウントや投稿はこの端末のブラウザ内にのみ保存され、他の端末とは共有されません。
+        </p>
+    </div>
+</div>
+
+<!-- ============ アプリ本体 ============ -->
+<div id="app-screen" class="hidden">
+    <header class="lib-shelf lib-shelf-top sticky top-0 z-20 border-b" style="border-color:var(--border-color)">
+        <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+            <h1 data-action="nav" data-view="home" class="serif text-xl font-bold tracking-wider cursor-pointer select-none" style="color:var(--accent-color)" title="ホームへ"><i class="fas fa-book-bookmark mr-1 text-base"></i>筆置</h1>
+            <div class="flex items-center gap-2">
+                <button data-action="bell" class="relative w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="通知">
+                    <i class="fas fa-bell"></i>
+                    <span id="bell-badge" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style="background:var(--danger-color)"></span>
+                </button>
+                <div id="header-avatar" title="設定"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-4 py-5 pb-safe">
+        <!-- ホーム -->
+        <section id="view-home" class="view space-y-4">
+            <div class="card rounded-2xl p-6 relative overflow-hidden">
+                <svg class="absolute -right-3 -top-3 w-24 h-24" style="opacity:.1" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="#5c7a3f" fill-rule="evenodd" d="M100 180 C44 174 18 124 28 82 C36 50 66 22 100 18 C134 22 164 50 172 82 C182 124 156 174 100 180 Z M100 46 C88 70 88 110 100 140 C112 110 112 70 100 46 Z M48 80 C62 86 72 100 76 120 C58 116 44 102 42 84 Z M152 80 C138 86 128 100 124 120 C142 116 156 102 158 84 Z"/></svg>
+                <p class="text-sm relative" style="color:var(--text-muted-color)">おかえりなさい</p>
+                <h2 id="home-greeting" class="serif text-2xl font-bold mt-1 relative"></h2>
+                <p class="text-sm mt-2 relative" style="color:var(--text-muted-color)">今日も、ことばを紡ぎましょう。</p>
+            </div>
+            <p class="serif text-sm px-1" style="color:var(--text-muted-color)">本棚からえらぶ</p>
+            <div class="bookshelf">
+                <div class="grid grid-cols-4 gap-2 sm:gap-3 items-end">
+                    <button class="book book-green" data-action="nav" data-view="koryu">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">交流</span><span class="book-sub">仲間とつながる</span></span>
+                    </button>
+                    <button class="book book-blue" data-action="nav" data-view="blog">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">ブログ</span><span id="home-blog-sub" class="book-sub">記事を読む・書く</span></span>
+                    </button>
+                    <button class="book book-yellow" data-action="nav" data-view="room">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">個室</span><span class="book-sub">あなたの作業部屋</span></span>
+                    </button>
+                    <button class="book book-gray" data-action="nav" data-view="settings">
+                        <span class="book-spine"></span>
+                        <span class="book-cover serif"><span class="book-title">設定</span><span class="book-sub">プロフィール・管理</span></span>
+                    </button>
+                </div>
+                <div class="shelf-plank"></div>
+            </div>
+            <p class="text-xs text-center" style="color:var(--text-muted-color)"><i class="fas fa-feather-pointed mr-1"></i>蔵書 <span id="home-stat-posts">0</span> 投稿 ／ <span id="home-stat-blogs">0</span> 記事 ／ <span id="home-stat-users">0</span> 人</p>
+        </section>
+
+        <!-- 交流 -->
+        <section id="view-koryu" class="view hidden space-y-4">
+            <div class="flex items-center gap-2">
+                <button data-action="feedtab" data-tab="following" class="feedtab btn-accent px-4 py-1.5 rounded-full text-sm font-semibold">フォロー中</button>
+                <button data-action="feedtab" data-tab="all" class="feedtab btn-ghost px-4 py-1.5 rounded-full text-sm font-semibold">全体</button>
+                <div class="ml-auto flex items-center gap-1">
+                    <button data-action="toggle-search" class="w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="投稿を検索"><i class="fas fa-magnifying-glass"></i></button>
+                    <button data-action="show-bookmarks" class="w-9 h-9 rounded-full btn-ghost flex items-center justify-center" title="ブックマーク一覧"><i class="fas fa-bookmark"></i></button>
+                </div>
+            </div>
+            <div id="search-box" class="card rounded-2xl p-3 hidden">
+                <div class="flex gap-2 items-center">
+                    <i class="fas fa-magnifying-glass" style="color:var(--text-muted-color)"></i>
+                    <input type="text" id="search-input" class="input-field flex-1 px-3 py-1.5 rounded-md text-sm" placeholder="ことばで投稿を検索…">
+                    <button data-action="clear-search" class="btn-ghost px-3 py-1.5 rounded-md text-xs">クリア</button>
+                </div>
+            </div>
+            <div id="feed-list" class="space-y-4"></div>
+
+            <!-- 投稿フォーム（フローティングボタンで開く） -->
+            <button data-action="compose-open" class="fab btn-accent" title="投稿する"><i class="fas fa-feather-pointed"></i></button>
+            <div id="compose-modal" class="fixed inset-0 z-40 hidden">
+                <div class="absolute inset-0" style="background:rgba(40,26,14,.5)" data-action="compose-close"></div>
+                <div class="absolute left-1/2 -translate-x-1/2 top-16 w-[92%] max-w-lg card rounded-2xl p-4 fade-in">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="serif font-bold text-lg">いまの一筆</span>
+                        <button data-action="compose-close" class="w-8 h-8 rounded-full btn-ghost flex items-center justify-center" title="閉じる"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <textarea id="post-input" rows="4" maxlength="200" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="いま考えていること、執筆の進捗など…（200字まで）"></textarea>
+                    <div class="flex justify-between items-center mt-2 gap-2">
+                        <span id="post-count" class="text-xs whitespace-nowrap" style="color:var(--text-muted-color)">0 / 200</span>
+                        <div class="flex items-center gap-2">
+                            <div class="relative">
+                                <button id="vis-btn" data-action="toggle-visibility" class="btn-ghost px-3 py-1.5 rounded-md text-sm font-semibold flex items-center whitespace-nowrap"><i class="fas fa-angle-down mr-1"></i>投稿先</button>
+                                <div id="vis-menu" class="hidden absolute right-0 top-full mt-2 w-60 card rounded-xl overflow-hidden z-30">
+                                    <button data-action="set-visibility" data-vis="followers" class="vis-item"><i class="fas fa-user-group mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">フォロワーのみ</p><p class="text-xs" style="color:var(--text-muted-color)">あなたをフォローしている人だけに見えます</p></div></button>
+                                    <button data-action="set-visibility" data-vis="public" class="vis-item"><i class="fas fa-globe mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">誰もが見える</p><p class="text-xs" style="color:var(--text-muted-color)">すべての利用者に見えます</p></div></button>
+                                    <button data-action="set-visibility" data-vis="private" class="vis-item"><i class="fas fa-lock mt-0.5" style="color:var(--accent-color)"></i><div><p class="text-sm font-semibold">自分だけ</p><p class="text-xs" style="color:var(--text-muted-color)">誰にも見えません（自分用のメモ）</p></div></button>
+                                </div>
+                            </div>
+                            <button data-action="post" class="btn-accent px-4 py-1.5 rounded-md text-sm font-semibold">投稿</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ブログ -->
+        <section id="view-blog" class="view hidden space-y-4">
+            <div id="blog-author-bar" class="hidden">
+                <button data-action="blog-new" class="btn-accent w-full py-2.5 rounded-md font-semibold"><i class="fas fa-pen-nib mr-2"></i>記事を書く</button>
+            </div>
+            <div class="card rounded-2xl p-4 space-y-3">
+                <div class="flex gap-2 items-center">
+                    <i class="fas fa-magnifying-glass" style="color:var(--text-muted-color)"></i>
+                    <input type="text" id="blog-search" class="input-field flex-1 px-3 py-1.5 rounded-md text-sm" placeholder="タイトル・本文を検索…">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <select id="blog-sort" class="input-field px-2 py-1.5 rounded-md text-xs">
+                        <option value="new">新しい順</option>
+                        <option value="old">古い順</option>
+                        <option value="bookmarks">ブックマークが多い順</option>
+                    </select>
+                    <select id="blog-tag" class="input-field px-2 py-1.5 rounded-md text-xs"></select>
+                    <select id="blog-author" class="input-field px-2 py-1.5 rounded-md text-xs"></select>
+                </div>
+            </div>
+            <div id="blog-list" class="space-y-3"></div>
+            <div id="blog-pager" class="flex items-center justify-between gap-2"></div>
+        </section>
+
+        <!-- 動的ビュー（戻る付き） -->
+        <section id="view-blog-detail" class="view hidden space-y-4"></section>
+        <section id="view-blog-edit" class="view hidden space-y-4"></section>
+        <section id="view-subpage" class="view hidden space-y-4"></section>
+        <section id="view-profile" class="view hidden space-y-4"></section>
+        <section id="view-notifications" class="view hidden space-y-4"></section>
+        <section id="view-bookmarks" class="view hidden space-y-4"></section>
+
+        <!-- 個室（作業部屋） -->
+        <section id="view-room" class="view hidden space-y-4"></section>
+        <section id="view-memo-edit" class="view hidden space-y-4"></section>
+
+        <!-- 設定トップ -->
+        <section id="view-settings" class="view hidden space-y-4">
+            <div class="card rounded-2xl overflow-hidden" id="settings-menu"></div>
+            <button data-action="logout" class="btn-danger w-full py-2.5 rounded-md font-semibold"><i class="fas fa-right-from-bracket mr-2"></i>ログアウト</button>
+            <p class="text-[11px] text-center" style="color:var(--text-muted-color)">筆置 試作版 v0.5 ／ データはこの端末内に保存されます</p>
+        </section>
+    </main>
+
+    <nav class="bottom-nav lib-shelf lib-shelf-bottom fixed bottom-0 left-0 right-0 z-20 border-t" style="border-color:var(--border-color)">
+        <div class="max-w-2xl mx-auto grid grid-cols-4">
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="home"><i class="fas fa-house nav-icon text-lg"></i><span class="text-[11px]">ホーム</span></button>
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="koryu"><i class="fas fa-comments nav-icon text-lg"></i><span class="text-[11px]">交流</span></button>
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="blog"><i class="fas fa-book-open nav-icon text-lg"></i><span class="text-[11px]">ブログ</span></button>
+            <button class="nav-btn flex flex-col items-center py-2.5 gap-0.5" data-action="nav" data-view="settings"><i class="fas fa-gear nav-icon text-lg"></i><span class="text-[11px]">設定</span></button>
+        </div>
+    </nav>
+
+    <!-- 本を開く／閉じる演出のステージ -->
+    <div id="book-stage" class="fixed inset-0 z-50 hidden" style="background:rgba(40,26,14,.42)">
+        <div id="book3d-inner" class="book3d-inner">
+            <div class="book3d-page"></div>
+            <div id="book3d-cover" class="book3d-cover book-green">
+                <span class="book3d-spine"></span>
+                <span id="book3d-title" class="book3d-title serif"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-sm font-semibold text-white hidden text-center" style="background-color:var(--accent-color)"></div>
+
+<script>
+/* =========================================================
+   筆置 (Fudeoki) — 小説家の交流サイト 試作版 v0.5
+   データは localStorage に保存（この端末のみ）。
+   ※試作のためパスワードは簡易ハッシュです。本番運用時は
+     クラウド/サーバー側の認証に置き換えてください。
+   ========================================================= */
+(function () {
+    'use strict';
+    const KEYS = { users:'fudebi_users', session:'fudebi_session', posts:'fudebi_posts', blogs:'fudebi_blogs', notifs:'fudebi_notifs', reports:'fudebi_reports', feedbacks:'fudebi_feedbacks', banned:'fudebi_banned', memos:'fudebi_memos' };
+    const GENRES = ['恋愛','ファンタジー','SF','ミステリ','ホラー','時代・歴史','現代ドラマ','エッセイ','詩・短歌','ライト文芸','二次創作','BL','GL','ノンフィクション'];
+    const LINK_PRESETS = ['カクヨム','小説家になろう','pixiv','X (Twitter)','note','個人サイト'];
+
+    const load = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } };
+    const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+    let users   = load(KEYS.users, []);
+    let posts   = load(KEYS.posts, []);
+    let blogs   = load(KEYS.blogs, []);
+    let notifs    = load(KEYS.notifs, []);
+    let reports   = load(KEYS.reports, []);
+    let feedbacks = load(KEYS.feedbacks, []);
+    let banned    = load(KEYS.banned, []);   // BANされたメールアドレス一覧
+    let memos     = load(KEYS.memos, []);    // 個室（作業部屋）のメモ
+    let session   = load(KEYS.session, null);
+
+    // 旧データの補完
+    users.forEach(u => {
+        u.bio = u.bio || ''; u.genres = u.genres || []; u.links = u.links || [];
+        u.following = u.following || []; u.followers = u.followers || []; u.blocked = u.blocked || [];
+        u.muteWords = u.muteWords || []; if (u.blogComments === undefined) u.blogComments = true;
+    });
+    posts.forEach(p => {
+        p.lamps = p.lamps || p.likes || [];   // 旧「いいね」は「灯」へ引き継ぎ
+        p.bookmarks = p.bookmarks || [];
+        p.comments = p.comments || [];
+        if (!p.visibility) p.visibility = 'public';   // 旧投稿は全体公開扱い
+    });
+    blogs.forEach(b => {
+        b.comments = b.comments || [];
+        b.tags = b.tags || [];
+        b.bookmarks = b.bookmarks || [];
+        b.format = b.format || 'text';        // 旧記事はプレーンテキスト
+        if (!b.updatedAt) b.updatedAt = b.createdAt;
+    });
+    memos.forEach(m => {
+        m.tags = m.tags || [];
+        if (m.pinned === undefined) m.pinned = false;
+    });
+
+    const persist = () => { save(KEYS.users, users); save(KEYS.posts, posts); save(KEYS.blogs, blogs); save(KEYS.notifs, notifs); save(KEYS.reports, reports); save(KEYS.feedbacks, feedbacks); save(KEYS.banned, banned); save(KEYS.memos, memos); save(KEYS.session, session); };
+
+    const $  = (s, el=document) => el.querySelector(s);
+    const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    const esc = (s='') => (''+s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const me = () => users.find(u => u.id === session) || null;
+    const userById = id => users.find(u => u.id === id) || null;
+
+    function hash(str){ let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))>>>0; return h.toString(16); }
+    const COLORS = ['#a78bfa','#f59e0b','#34d399','#60a5fa','#f472b6','#fb7185','#38bdf8','#c084fc'];
+    const colorFor = id => COLORS[[...(''+id)].reduce((a,c)=>a+c.charCodeAt(0),0) % COLORS.length];
+    const initial = name => (name||'？').trim().charAt(0).toUpperCase();
+    function timeAgo(ts){ const d=(Date.now()-ts)/1000; if(d<60)return 'たった今'; if(d<3600)return Math.floor(d/60)+'分前'; if(d<86400)return Math.floor(d/3600)+'時間前'; if(d<604800)return Math.floor(d/86400)+'日前'; return new Date(ts).toLocaleDateString('ja-JP'); }
+    const fmtDate = ts => new Date(ts).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+    const fmtDateTime = ts => { const d=new Date(ts), p=n=>('0'+n).slice(-2); return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+    // ブログ本文（リッチHTML）の無害化と、プレビュー用のテキスト抽出
+    const RICH_TAGS = new Set(['H1','H2','H3','B','STRONG','I','EM','U','S','UL','OL','LI','P','BR','DIV','SPAN','BLOCKQUOTE']);
+    function sanitizeNode(src, dst){
+        src.childNodes.forEach(ch=>{
+            if(ch.nodeType===3){ dst.appendChild(document.createTextNode(ch.nodeValue)); }
+            else if(ch.nodeType===1){
+                if(RICH_TAGS.has(ch.tagName)){ const el=document.createElement(ch.tagName.toLowerCase()); sanitizeNode(ch, el); dst.appendChild(el); }
+                else { sanitizeNode(ch, dst); } // 許可外タグは中身だけ残す
+            }
+        });
+    }
+    function sanitizeBlog(html){ const s=document.createElement('div'); s.innerHTML=html||''; const d=document.createElement('div'); sanitizeNode(s,d); return d.innerHTML; }
+    function stripHtml(html){ const d=document.createElement('div'); d.innerHTML=html||''; return (d.textContent||'').replace(/\s+/g,' ').trim(); }
+    const validUrl = u => /^https?:\/\/.+/i.test(u);
+    const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+    function avatar(user, size='w-9 h-9 text-sm', clickable=false){
+        if(!user) return `<div class="avatar ${size} rounded-full" style="background:#888">？</div>`;
+        const cl = clickable ? `data-action="open-profile" data-id="${user.id}" style="background:${colorFor(user.id)};cursor:pointer"` : `style="background:${colorFor(user.id)}"`;
+        return `<div class="avatar ${size} rounded-full" ${cl}>${esc(initial(user.penname))}</div>`;
+    }
+    function nameTag(user, clickable=true){
+        if(!user) return `<span class="font-semibold">退会者</span>`;
+        const cl = clickable ? `data-action="open-profile" data-id="${user.id}" class="font-semibold cursor-pointer hover:underline"` : `class="font-semibold"`;
+        return `<span ${cl}>${esc(user.penname)}</span>${roleBadge(user.role)}`;
+    }
+    function roleBadge(role){ if(role==='admin')return ' <span class="badge badge-admin">管理人</span>'; if(role==='author')return ' <span class="badge badge-author">ブロガー</span>'; return ''; }
+    const canWriteBlog = u => u && (u.role==='admin'||u.role==='author');
+
+    // ブロック・ミュート
+    const blockedEither = (aId,bId) => { const a=userById(aId), b=userById(bId); return (a&&a.blocked.includes(bId))||(b&&b.blocked.includes(aId)); };
+    const hasMute = (text,words) => words.some(w => w && (''+text).toLowerCase().includes(w.toLowerCase()));
+
+    let toastTimer;
+    function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.remove('hidden'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.add('hidden'),2400); }
+
+    // ================= 通知 =================
+    function addNotif(toId, type, fromId, refId){ if(toId===fromId) return; notifs.push({id:uid(),toId,type,fromId,refId,createdAt:Date.now(),read:false}); }
+    function removeNotif(toId,type,fromId,refId){ notifs = notifs.filter(n => !(n.toId===toId&&n.type===type&&n.fromId===fromId&&n.refId===refId)); }
+    const myUnread = () => notifs.filter(n => n.toId===session && !n.read).length;
+    function updateBell(){ const n=myUnread(); const b=$('#bell-badge'); if(n>0){ b.textContent=n>99?'99+':n; b.classList.remove('hidden'); } else b.classList.add('hidden'); }
+
+    // ================= ナビゲーション =================
+    const TOP_VIEWS = ['home','koryu','blog','room','settings'];
+    let hist = [];
+    function showView(id){ $$('.view').forEach(v=>v.classList.add('hidden')); const el=$('#view-'+id); if(el){ el.classList.remove('hidden'); el.classList.add('fade-in'); el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); } }
+    function setNavActive(){ const root = hist[0] ? hist[0].view : 'home'; $$('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===root)); }
+    function navTo(view){ hist=[{view, render: TOP_RENDER[view]}]; showView(view); if(TOP_RENDER[view]) TOP_RENDER[view](); setNavActive(); window.scrollTo({top:0}); const m=$('main'); if(m) m.classList.toggle('in-book', view!=='home'); }
+    function push(view, render){ hist.push({view, render}); showView(view); if(render) render(); setNavActive(); window.scrollTo({top:0}); }
+    function back(){ if(hist.length>1){ hist.pop(); const c=hist[hist.length-1]; showView(c.view); if(c.render) c.render(); setNavActive(); window.scrollTo({top:0}); } else navTo('home'); }
+    const backBar = label => `<button data-action="back" class="btn-ghost px-3 py-1.5 rounded-md text-sm"><i class="fas fa-arrow-left mr-1"></i>${label||'戻る'}</button>`;
+
+    // 本を開く／閉じる演出
+    const BOOK_META = { koryu:{c:'book-green',t:'交流'}, blog:{c:'book-blue',t:'ブログ'}, room:{c:'book-yellow',t:'個室'}, settings:{c:'book-gray',t:'設定'} };
+    let bookAnimating = false;
+    function animateBook(mode, view, done){
+        const meta = BOOK_META[view];
+        const stage = $('#book-stage');
+        if(!meta || !stage || bookAnimating){ done(); return; }
+        bookAnimating = true;
+        const cover = $('#book3d-cover'), title = $('#book3d-title'), inner = $('#book3d-inner');
+        cover.className = 'book3d-cover ' + meta.c; title.textContent = meta.t;
+        stage.classList.remove('hidden','fade-out');
+        if(mode === 'open'){
+            inner.classList.remove('zoom'); cover.style.transform = 'rotateY(0deg)';
+            void stage.offsetWidth;
+            requestAnimationFrame(()=>{ cover.style.transform = 'rotateY(-158deg)'; inner.classList.add('zoom'); });
+            setTimeout(done, 490);
+            setTimeout(()=> stage.classList.add('fade-out'), 700);
+            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 1000);
+        } else { // close
+            inner.classList.remove('zoom'); cover.style.transform = 'rotateY(-158deg)';
+            void stage.offsetWidth;
+            requestAnimationFrame(()=>{ cover.style.transform = 'rotateY(0deg)'; });
+            setTimeout(done, 560);
+            setTimeout(()=> stage.classList.add('fade-out'), 780);
+            setTimeout(()=>{ stage.classList.add('hidden'); bookAnimating=false; }, 1060);
+        }
+    }
+
+    const TOP_RENDER = { home:renderHome, koryu:renderKoryu, blog:renderBlog, room:renderRoom, settings:renderSettings };
+
+    // ================= 認証 =================
+    function showAuth(){ $('#auth-screen').classList.remove('hidden'); $('#app-screen').classList.add('hidden'); }
+    function showApp(){ $('#auth-screen').classList.add('hidden'); $('#app-screen').classList.remove('hidden'); renderHeader(); updateBell(); navTo('home'); }
+
+    $('#tab-login').addEventListener('click', ()=>{ $('#login-form').classList.remove('hidden'); $('#register-form').classList.add('hidden'); $('#tab-login').className='flex-1 py-2 text-sm font-semibold btn-accent'; $('#tab-register').className='flex-1 py-2 text-sm font-semibold btn-ghost border-0'; });
+    $('#tab-register').addEventListener('click', ()=>{ $('#register-form').classList.remove('hidden'); $('#login-form').classList.add('hidden'); $('#tab-register').className='flex-1 py-2 text-sm font-semibold btn-accent'; $('#tab-login').className='flex-1 py-2 text-sm font-semibold btn-ghost border-0'; });
+
+    $('#register-form').addEventListener('submit', e=>{
+        e.preventDefault();
+        const penname=$('#reg-penname').value.trim(), email=$('#reg-email').value.trim().toLowerCase(), pw=$('#reg-password').value, err=$('#reg-error');
+        err.classList.add('hidden');
+        if(!penname||!email||pw.length<6){ err.textContent='入力内容を確認してください。'; err.classList.remove('hidden'); return; }
+        if(!validEmail(email)){ err.textContent='正しいメールアドレスを入力してください。'; err.classList.remove('hidden'); return; }
+        if(banned.includes(email)){ err.textContent='このメールアドレスはご利用いただけません。'; err.classList.remove('hidden'); return; }
+        if(users.some(u=>u.email===email)){ err.textContent='このメールアドレスは既に登録されています。'; err.classList.remove('hidden'); return; }
+        const isFirst=users.length===0;
+        users.push({ id:uid(), penname, email, pw:hash(pw), role:isFirst?'admin':'member', bio:'', genres:[], links:[], following:[], followers:[], blocked:[], muteWords:[], blogComments:true, createdAt:Date.now() });
+        session=users[users.length-1].id; persist(); e.target.reset(); showApp();
+        toast(isFirst?'管理人として登録しました':'ようこそ、筆置へ');
+    });
+    $('#login-form').addEventListener('submit', e=>{
+        e.preventDefault();
+        const email=$('#login-email').value.trim().toLowerCase(), pw=$('#login-password').value, err=$('#login-error');
+        err.classList.add('hidden');
+        if(banned.includes(email)){ err.textContent='このメールアドレスはご利用いただけません。'; err.classList.remove('hidden'); return; }
+        const u=users.find(x=>x.email===email);
+        if(!u||u.pw!==hash(pw)){ err.textContent='メールアドレスまたはパスワードが違います。'; err.classList.remove('hidden'); return; }
+        session=u.id; persist(); e.target.reset(); showApp(); toast('おかえりなさい');
+    });
+
+    // ================= ヘッダー / ホーム =================
+    function renderHeader(){ $('#header-avatar').innerHTML = `<div data-action="nav" data-view="settings" style="cursor:pointer" title="設定">${avatar(me(),'w-9 h-9 text-sm',false)}</div>`; }
+    function renderHome(){ const u=me(); if(!u)return; $('#home-greeting').textContent=u.penname+' さん'; $('#home-stat-posts').textContent=posts.length; $('#home-stat-blogs').textContent=blogs.length; $('#home-stat-users').textContent=users.length;
+        const bs=$('#home-blog-sub'); if(bs) bs.textContent = canWriteBlog(u) ? '記事を読む・書く' : '記事を読む'; }
+
+    // ================= 個室（作業部屋） =================
+    const MEMO_TAGS = ['人物','設定','展開','ネタ','その他'];
+    const MEMO_MAX = 1000;
+    let memoEditPinned = false;   // 編集中のピン留め状態
+    function copyText(text){
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(()=>toast('コピーしました')).catch(()=>fallbackCopy(text)); }
+        else fallbackCopy(text);
+    }
+    function fallbackCopy(text){ const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand('copy'); toast('コピーしました'); }catch{ toast('コピーできませんでした'); } document.body.removeChild(ta); }
+    function myMemos(){ return memos.filter(m=>m.ownerId===session)
+        .sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0) || b.updatedAt-a.updatedAt ); }
+    function renderRoom(){
+        const mine=myMemos();
+        const list = mine.length ? mine.map(m=>{
+            const prev=(m.body||'').replace(/\s+/g,' ').slice(0,70);
+            const tags=(m.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
+            return `<div class="card rounded-2xl p-4 fade-in" style="${m.pinned?'border-color:var(--accent-color)':''}">
+                <div class="flex items-start gap-2">
+                    <button data-action="memo-pin" data-id="${m.id}" class="px-1 pt-0.5 flex-shrink-0" title="${m.pinned?'ピン留めを外す':'ピン留め'}" style="color:${m.pinned?'var(--accent-color)':'var(--text-muted-color)'}"><i class="fa-${m.pinned?'solid':'regular'} fa-thumbtack" style="transform:rotate(45deg);display:inline-block"></i></button>
+                    <div class="flex-1 min-w-0 cursor-pointer" data-action="open-memo" data-id="${m.id}">
+                        <div class="flex items-center gap-2"><span class="serif font-bold truncate">${esc(m.title||'無題')}</span><span class="text-[11px] ml-auto whitespace-nowrap" style="color:var(--text-muted-color)">${timeAgo(m.updatedAt)}</span></div>
+                        ${prev?`<p class="text-sm mt-1" style="color:var(--text-muted-color)">${esc(prev)}${(m.body||'').length>70?'…':''}</p>`:''}
+                        ${tags?`<div class="flex flex-wrap gap-1 mt-2">${tags}</div>`:''}
+                    </div>
+                    <button data-action="memo-copy" data-id="${m.id}" class="w-8 h-8 rounded-full btn-ghost flex items-center justify-center flex-shrink-0" title="本文をコピー"><i class="far fa-copy"></i></button>
+                </div>
+            </div>`; }).join('')
+            : emptyState('fa-mug-hot','まだ何もありません','「新しい原稿」から、下書きやメモを自由に書けます。誰にも見えない、あなただけの部屋です。');
+        $('#view-room').innerHTML = `
+            <div class="card rounded-2xl p-6 relative overflow-hidden">
+                <p class="text-sm" style="color:var(--text-muted-color)"><i class="fas fa-door-closed mr-1"></i>個室</p>
+                <h2 class="serif text-2xl font-bold mt-1">あなたの作業部屋</h2>
+                <p class="text-sm mt-2" style="color:var(--text-muted-color)">下書き・構想・覚え書き。ここに記したものは、誰にも公開されません。</p>
+            </div>
+            <button data-action="memo-new" class="btn-accent w-full py-2.5 rounded-md font-semibold"><i class="fas fa-feather-pointed mr-2"></i>新しい原稿</button>
+            <div class="space-y-3">${list}</div>`;
+    }
+    function renderMemoEdit(id){
+        const m = id ? memos.find(x=>x.id===id && x.ownerId===session) : null;
+        const sel = m ? (m.tags||[]) : [];
+        const len = m ? (m.body||'').length : 0;
+        const pinned = m ? !!m.pinned : false;
+        memoEditPinned = pinned;
+        $('#view-memo-edit').innerHTML = `${backBar('個室')}
+            <div class="card rounded-2xl p-5 space-y-3">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="memo-title" maxlength="80" class="input-field flex-1 px-3 py-2 rounded-md serif text-lg" placeholder="タイトル（無題でも可）" value="${m?esc(m.title):''}">
+                    <button id="memo-pin-btn" data-action="memo-pin-toggle" class="w-10 h-10 rounded-md btn-ghost flex items-center justify-center flex-shrink-0" title="ピン留め" style="${pinned?'color:#fff;background:var(--accent-color);border-color:var(--accent-color)':''}"><i class="fa-${pinned?'solid':'regular'} fa-thumbtack" style="transform:rotate(45deg);display:inline-block"></i></button>
+                </div>
+                <div>
+                    <label class="block text-xs mb-1" style="color:var(--text-muted-color)">タグ</label>
+                    <div id="memo-tags" class="flex flex-wrap gap-2">${MEMO_TAGS.map(tg=>`<span class="chip ${sel.includes(tg)?'on':''}" data-action="memo-tag-toggle" data-tag="${tg}">${tg}</span>`).join('')}</div>
+                </div>
+                <textarea id="memo-body" rows="14" maxlength="${MEMO_MAX}" class="textarea-field w-full px-3 py-2 rounded-md serif resize-none" placeholder="ここに自由に書きましょう（${MEMO_MAX}字まで）。">${m?esc(m.body):''}</textarea>
+                <div class="flex items-center justify-between">
+                    <span id="memo-count" class="text-xs" style="color:var(--text-muted-color)">${len} / ${MEMO_MAX}</span>
+                    <div class="flex gap-2">
+                        ${m?`<button data-action="memo-copy" data-id="${m.id}" class="btn-ghost px-3 py-2 rounded-md text-sm"><i class="far fa-copy mr-1"></i>コピー</button>`:''}
+                        ${m?`<button data-action="memo-del" data-id="${m.id}" class="btn-ghost px-3 py-2 rounded-md text-sm"><i class="fas fa-trash mr-1"></i>削除</button>`:''}
+                        <button data-action="memo-save" data-id="${m?m.id:''}" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">保存する</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ================= 交流（SNS） =================
+    const FOLD = 100;          // この文字数を超えたら折りたたむ
+    const POST_MAX = 200;      // 投稿の文字数上限
+    let feedTab = 'following'; // 初期表示はフォロー中
+    let composeVis = null;     // 投稿先（毎回かならず選ぶ）
+    let searchQuery = '';
+    let searchOpen = false;
+    const VIS = {
+        followers:{label:'フォロワーのみ', icon:'fa-user-group'},
+        public:   {label:'誰もが見える',   icon:'fa-globe'},
+        private:  {label:'自分だけ',       icon:'fa-lock'},
+    };
+
+    // 投稿の可視性判定（自分の投稿は常に見える。private は本人のみ）
+    function canSee(p){
+        if(p.authorId===session) return true;
+        if(p.visibility==='private') return false;
+        if(p.visibility==='public') return true;
+        if(p.visibility==='followers'){ const me_=me(); return me_ && me_.following.includes(p.authorId); }
+        return true;
+    }
+
+    function updateComposeUI(){
+        const btn=$('#vis-btn'); if(!btn) return;
+        if(composeVis){ const v=VIS[composeVis]; btn.innerHTML=`<i class="fas ${v.icon} mr-1"></i>${v.label}`; btn.style.color='#fff'; btn.style.backgroundColor='var(--accent-color)'; btn.style.borderColor='var(--accent-color)'; }
+        else { btn.innerHTML=`<i class="fas fa-angle-down mr-1"></i>投稿先`; btn.style.color=''; btn.style.backgroundColor=''; btn.style.borderColor=''; }
+        $$('#vis-menu .vis-item').forEach(it=>it.classList.toggle('on', it.dataset.vis===composeVis));
+    }
+
+    function renderKoryu(){
+        $$('.feedtab').forEach(b=>{ const on=b.dataset.tab===feedTab; b.className=`feedtab ${on?'btn-accent':'btn-ghost'} px-4 py-1.5 rounded-full text-sm font-semibold`; });
+        const sb=$('#search-box'); if(sb) sb.classList.toggle('hidden', !searchOpen);
+        const si=$('#search-input'); if(si) si.value=searchQuery;
+        updateComposeUI();
+        const ta=$('#post-input'); if(ta){ const c=$('#post-count'); if(c) c.textContent=`${ta.value.length} / ${POST_MAX}`; }
+        renderFeed();
+    }
+
+    function visBadge(p){
+        if(p.visibility==='private') return `<span class="text-[10px] px-1.5 py-0.5 rounded-full" style="background:var(--accent-soft-color);color:var(--accent-color)"><i class="fas fa-lock mr-0.5"></i>自分だけ</span>`;
+        if(p.visibility==='followers') return `<span class="text-[10px] px-1.5 py-0.5 rounded-full" style="background:var(--accent-soft-color);color:var(--accent-color)"><i class="fas fa-user-group mr-0.5"></i>フォロワー</span>`;
+        return '';
+    }
+
+    function postCard(p){
+        const a=userById(p.authorId), u=me();
+        const lit=(p.lamps||[]).includes(session), marked=(p.bookmarks||[]).includes(session);
+        const cc=(p.comments||[]).filter(c=>!blockedEither(session,c.authorId)&&!hasMute(c.body,u.muteWords)).length;
+        // 本文（100字以降は折りたたみ）
+        const full=p.body||'';
+        const needFold=full.length>FOLD;
+        const head=esc(needFold?full.slice(0,FOLD):full);
+        const rest=needFold?esc(full.slice(FOLD)):'';
+        const bodyHtml=`<p class="post-body mt-1 whitespace-pre-wrap break-words">${head}${needFold?`<span class="fold-ellipsis">…</span><span class="fold-rest hidden">${rest}</span><button data-action="expand" class="fold-btn">全文表示</button>`:''}</p>`;
+        const comments=(p.comments||[]).filter(c=>!blockedEither(session,c.authorId)&&!hasMute(c.body,u.muteWords)).map(c=>{
+            const ca=userById(c.authorId);
+            return `<div class="flex gap-2 mt-2">${avatar(ca,'w-7 h-7 text-xs',true)}
+                <div class="flex-1 rounded-lg px-3 py-2" style="background:var(--bg-color)">
+                    <div class="flex items-center gap-2 text-xs">${nameTag(ca)}<span class="text-[10px]" style="color:var(--text-muted-color)">${timeAgo(c.createdAt)}</span>
+                    ${ca&&ca.id!==session?`<button data-action="report" data-rtype="comment" data-id="${c.id}" data-post="${p.id}" class="ml-auto text-[10px]" style="color:var(--text-muted-color)" title="通報"><i class="fas fa-flag"></i></button>`:''}</div>
+                    <p class="text-sm mt-0.5 whitespace-pre-wrap break-words">${esc(c.body)}</p>
+                </div></div>`;
+        }).join('');
+        return `<div id="post-${p.id}" class="card rounded-2xl p-4 fade-in"><div class="flex gap-3">${avatar(a,'w-9 h-9 text-sm',true)}
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap text-sm">${nameTag(a)}<span class="text-xs" style="color:var(--text-muted-color)">${timeAgo(p.createdAt)}</span>${visBadge(p)}
+                    ${p.authorId===session?`<button data-action="del-post" data-id="${p.id}" class="ml-auto text-xs" style="color:var(--text-muted-color)" title="削除"><i class="fas fa-trash"></i></button>`:`<button data-action="report" data-rtype="post" data-id="${p.id}" class="ml-auto text-xs" style="color:var(--text-muted-color)" title="通報"><i class="fas fa-flag"></i></button>`}
+                </div>
+                ${bodyHtml}
+                <div class="flex items-center gap-5 mt-3 text-sm" style="color:var(--text-muted-color)">
+                    <button data-action="lamp" data-id="${p.id}" class="flex items-center gap-1.5" title="灯をともす" style="${lit?'color:var(--accent-color)':''}"><i class="fa-${lit?'solid':'regular'} fa-lightbulb"></i><span class="text-xs">灯をともす</span></button>
+                    <button data-action="toggle-comment" data-id="${p.id}" class="flex items-center gap-1.5" title="コメント"><i class="far fa-comment"></i>${cc?`<span class="text-xs">${cc}</span>`:''}</button>
+                    <button data-action="bookmark" data-id="${p.id}" class="flex items-center gap-1.5 ml-auto" title="ブックマーク" style="${marked?'color:var(--accent-color)':''}"><i class="fa-${marked?'solid':'regular'} fa-bookmark"></i></button>
+                </div>
+                <div class="comments mt-2 hidden" data-id="${p.id}">${comments}
+                    <div class="flex gap-2 mt-3">
+                        <input type="text" class="comment-input input-field flex-1 px-3 py-1.5 rounded-md text-sm" data-id="${p.id}" placeholder="コメントを書く…（200字まで）" maxlength="200">
+                        <button data-action="comment-send" data-id="${p.id}" class="btn-accent px-3 rounded-md text-sm">送信</button>
+                    </div>
+                </div>
+            </div></div></div>`;
+    }
+    function renderFeed(){
+        const u=me(); const list=$('#feed-list');
+        let vis=posts.filter(p=>canSee(p)&&!blockedEither(session,p.authorId)&&!hasMute(p.body,u.muteWords));
+        if(feedTab==='following') vis=vis.filter(p=>u.following.includes(p.authorId)||p.authorId===session);
+        const q=searchQuery.trim().toLowerCase();
+        if(q) vis=vis.filter(p=>(p.body||'').toLowerCase().includes(q));
+        if(!vis.length){
+            const msg = q ? ['fa-magnifying-glass','見つかりませんでした','別のことばで探してみてください。']
+                : feedTab==='following' ? ['fa-comments','フォロー中の投稿がありません','気になる人をフォローしてみましょう。']
+                : ['fa-comments','まだ投稿がありません','最初のひとことを投稿してみましょう。'];
+            list.innerHTML=emptyState(...msg); return;
+        }
+        list.innerHTML=vis.map(postCard).join('');
+    }
+
+    // ブックマーク一覧
+    function renderBookmarks(){
+        const list=posts.filter(p=>(p.bookmarks||[]).includes(session)&&canSee(p)&&!blockedEither(session,p.authorId));
+        const body=list.length ? list.map(p=>{ const a=userById(p.authorId); const prev=(p.body||'').replace(/\s+/g,' ').slice(0,60);
+            return `<button data-action="jump-post" data-id="${p.id}" class="card rounded-2xl p-4 w-full text-left transition fade-in">
+                <div class="flex items-center gap-2 text-xs" style="color:var(--text-muted-color)">${avatar(a,'w-6 h-6 text-xs')}<span class="font-semibold" style="color:var(--text-color)">${esc(a?a.penname:'退会者')}</span><span>${timeAgo(p.createdAt)}</span>${visBadge(p)}</div>
+                <p class="text-sm mt-2 break-words">${esc(prev)}${(p.body||'').length>60?'…':''}</p>
+            </button>`; }).join('')
+            : emptyState('fa-bookmark','ブックマークはありません','気になる投稿のしおりマークを押すと、ここに集まります。');
+        $('#view-bookmarks').innerHTML = `${backBar('交流')}<h2 class="font-bold px-1 text-lg mb-1"><i class="fas fa-bookmark mr-2" style="color:var(--accent-color)"></i>ブックマーク</h2><div class="space-y-3">${body}</div>`;
+    }
+
+    // ================= ブログ =================
+    const BLOG_PAGE_SIZE = 20;
+    let blogSort='new', blogTag='', blogAuthor='', blogSearch='', blogPage=0;
+
+    function filteredBlogs(){
+        let list=blogs.slice();
+        const q=blogSearch.trim().toLowerCase();
+        if(q) list=list.filter(b=>(b.title||'').toLowerCase().includes(q) || stripHtml(b.body).toLowerCase().includes(q));
+        if(blogTag) list=list.filter(b=>(b.tags||[]).includes(blogTag));
+        if(blogAuthor) list=list.filter(b=>b.authorId===blogAuthor);
+        if(blogSort==='old') list.sort((a,b)=>a.createdAt-b.createdAt);
+        else if(blogSort==='bookmarks') list.sort((a,b)=>((b.bookmarks||[]).length-(a.bookmarks||[]).length)||(b.createdAt-a.createdAt));
+        else list.sort((a,b)=>b.createdAt-a.createdAt);
+        return list;
+    }
+    function renderBlog(){
+        $('#blog-author-bar').classList.toggle('hidden', !canWriteBlog(me()));
+        // ソート・絞り込みUIの選択肢を更新
+        const allTags=[...new Set(blogs.flatMap(b=>b.tags||[]))].sort();
+        const authorIds=[...new Set(blogs.map(b=>b.authorId))];
+        const sortSel=$('#blog-sort'); if(sortSel) sortSel.value=blogSort;
+        const tagSel=$('#blog-tag'); if(tagSel) tagSel.innerHTML=`<option value="">すべてのタグ</option>`+allTags.map(t=>`<option value="${esc(t)}" ${t===blogTag?'selected':''}>${esc(t)}</option>`).join('');
+        const authSel=$('#blog-author'); if(authSel) authSel.innerHTML=`<option value="">すべての執筆者</option>`+authorIds.map(aid=>{ const au=userById(aid); return `<option value="${aid}" ${aid===blogAuthor?'selected':''}>${esc(au?au.penname:'退会者')}</option>`; }).join('');
+        const srch=$('#blog-search'); if(srch && srch.value!==blogSearch) srch.value=blogSearch;
+
+        const list=$('#blog-list'), pager=$('#blog-pager');
+        if(!blogs.length){ list.innerHTML=emptyState('fa-book-open','まだ記事がありません', canWriteBlog(me())?'「記事を書く」から投稿できます。':'管理人・ブロガーの記事がここに並びます。'); pager.innerHTML=''; return; }
+        const all=filteredBlogs();
+        if(!all.length){ list.innerHTML=emptyState('fa-magnifying-glass','記事が見つかりませんでした','検索条件を変えてお試しください。'); pager.innerHTML=''; return; }
+        const pages=Math.ceil(all.length/BLOG_PAGE_SIZE);
+        if(blogPage>=pages) blogPage=pages-1; if(blogPage<0) blogPage=0;
+        const slice=all.slice(blogPage*BLOG_PAGE_SIZE, blogPage*BLOG_PAGE_SIZE+BLOG_PAGE_SIZE);
+        list.innerHTML=slice.map(b=>{ const a=userById(b.authorId); const prev=stripHtml(b.body).slice(0,80);
+            const tags=(b.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
+            return `<button data-action="open-blog" data-id="${b.id}" class="card rounded-2xl p-5 w-full text-left transition fade-in">
+                <div class="text-[11px] mb-1" style="color:var(--text-muted-color)"><i class="far fa-clock mr-1"></i>${fmtDateTime(b.createdAt)}</div>
+                <h3 class="serif text-lg font-bold leading-snug">${esc(b.title)}</h3>
+                <p class="text-sm mt-2" style="color:var(--text-muted-color)">${esc(prev)}${stripHtml(b.body).length>80?'…':''}</p>
+                ${tags?`<div class="flex flex-wrap gap-1 mt-2">${tags}</div>`:''}
+                <div class="flex items-center gap-2 mt-3 text-xs">${avatar(a,'w-6 h-6 text-xs')}<span class="font-semibold">${esc(a?a.penname:'退会者')}</span>${roleBadge(a&&a.role)}
+                    <span class="ml-auto" style="color:var(--text-muted-color)"><i class="far fa-bookmark mr-1"></i>${(b.bookmarks||[]).length}</span>
+                    <span style="color:var(--text-muted-color)"><i class="far fa-comment mr-1"></i>${(b.comments||[]).length}</span></div>
+            </button>`; }).join('');
+        // ページをめくる
+        pager.innerHTML = pages>1 ? `
+            <button data-action="blog-page" data-dir="-1" class="btn-ghost px-4 py-2 rounded-md text-sm ${blogPage<=0?'opacity-40 pointer-events-none':''}"><i class="fas fa-chevron-left mr-1"></i>前のページ</button>
+            <span class="text-xs" style="color:var(--text-muted-color)">${blogPage+1} / ${pages}　（全${all.length}件）</span>
+            <button data-action="blog-page" data-dir="1" class="btn-ghost px-4 py-2 rounded-md text-sm ${blogPage>=pages-1?'opacity-40 pointer-events-none':''}">次のページ<i class="fas fa-chevron-right ml-1"></i></button>` : '';
+    }
+    function renderBlogDetail(id){
+        const b=blogs.find(x=>x.id===id); if(!b){ back(); return; }
+        const a=userById(b.authorId), u=me();
+        const canDel=u&&(u.id===b.authorId||u.role==='admin');
+        const canEdit=u&&(u.id===b.authorId||u.role==='admin');
+        const allowComment = !a || a.blogComments;
+        const marked=(b.bookmarks||[]).includes(session);
+        const tags=(b.tags||[]).map(t=>`<span class="blog-tag">${esc(t)}</span>`).join(' ');
+        const bodyHtml = b.format==='html' ? sanitizeBlog(b.body) : esc(b.body);
+        const comments=(b.comments||[]).filter(c=>!blockedEither(session,c.authorId)).map(c=>{ const ca=userById(c.authorId);
+            return `<div class="flex gap-2 mt-3">${avatar(ca,'w-7 h-7 text-xs',true)}
+                <div class="flex-1 rounded-lg px-3 py-2" style="background:var(--bg-color)">
+                    <div class="flex items-center gap-2 text-xs">${nameTag(ca)}<span class="text-[10px]" style="color:var(--text-muted-color)">${timeAgo(c.createdAt)}</span>
+                    ${ca&&ca.id!==session?`<button data-action="report" data-rtype="comment" data-id="${c.id}" class="ml-auto text-[10px]" style="color:var(--text-muted-color)" title="通報"><i class="fas fa-flag"></i></button>`:''}</div>
+                    <p class="text-sm mt-0.5 whitespace-pre-wrap break-words">${esc(c.body)}</p></div></div>`; }).join('');
+        $('#view-blog-detail').innerHTML = `${backBar('記事一覧')}
+            <article class="card rounded-2xl p-6">
+                <h1 class="serif text-2xl font-bold leading-snug">${esc(b.title)}</h1>
+                <div class="flex items-center gap-2 mt-3 mb-3">${avatar(a,'w-8 h-8 text-sm',true)}
+                    <div class="min-w-0"><div class="flex items-center gap-2 text-sm">${nameTag(a)}</div><span class="text-xs" style="color:var(--text-muted-color)"><i class="far fa-clock mr-1"></i>${fmtDateTime(b.createdAt)}${b.updatedAt&&b.updatedAt>b.createdAt+60000?`（更新 ${fmtDateTime(b.updatedAt)}）`:''}</span></div>
+                    <button data-action="blog-bookmark" data-id="${b.id}" class="ml-auto px-2 py-1 rounded-md text-sm" title="ブックマーク" style="${marked?'color:var(--accent-color)':'color:var(--text-muted-color)'}"><i class="fa-${marked?'solid':'regular'} fa-bookmark"></i> ${(b.bookmarks||[]).length}</button>
+                </div>
+                ${tags?`<div class="flex flex-wrap gap-1 mb-4">${tags}</div>`:''}
+                <div class="flex items-center gap-2 mb-5 pb-5 border-b" style="border-color:var(--border-color)">
+                    ${canEdit?`<button data-action="edit-blog" data-id="${b.id}" class="btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-pen mr-1"></i>編集</button>`:''}
+                    ${canDel?`<button data-action="del-blog" data-id="${b.id}" class="btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-trash mr-1"></i>削除</button>`:`<button data-action="report" data-rtype="blog" data-id="${b.id}" class="btn-ghost px-3 py-1.5 rounded-md text-xs"><i class="fas fa-flag mr-1"></i>通報</button>`}
+                </div>
+                <div class="blog-body serif ${b.format==='html'?'rich':''}">${bodyHtml}</div>
+            </article>
+            <div class="card rounded-2xl p-5">
+                <h3 class="font-bold mb-2"><i class="far fa-comment mr-2" style="color:var(--accent-color)"></i>読者からのコメント（${(b.comments||[]).length}）</h3>
+                <div>${comments || `<p class="text-sm" style="color:var(--text-muted-color)">${allowComment?'最初のコメントを書いてみましょう。':''}</p>`}</div>
+                ${allowComment?`<div class="flex gap-2 mt-4"><input type="text" id="blog-comment-input" class="input-field flex-1 px-3 py-2 rounded-md text-sm" placeholder="コメントを書く…" maxlength="500"><button data-action="blog-comment-send" data-id="${b.id}" class="btn-accent px-4 rounded-md text-sm font-semibold">送信</button></div>`
+                    : `<p class="text-sm mt-3" style="color:var(--text-muted-color)"><i class="fas fa-comment-slash mr-1"></i>この記事ではコメントを受け付けていません。</p>`}
+            </div>`;
+    }
+    function renderBlogEdit(id){
+        const b = id ? blogs.find(x=>x.id===id) : null;
+        const bodyInit = b ? (b.format==='html' ? sanitizeBlog(b.body) : esc(b.body).replace(/\n/g,'<br>')) : '';
+        const tagsInit = b ? (b.tags||[]).join('、') : '';
+        $('#view-blog-edit').innerHTML = `${backBar('戻る')}
+            <div class="card rounded-2xl p-5 space-y-4">
+                <input type="text" id="blog-edit-title" maxlength="80" class="input-field w-full px-3 py-2 rounded-md serif text-lg" placeholder="タイトル" value="${b?esc(b.title):''}">
+                <input type="text" id="blog-edit-tags" maxlength="120" class="input-field w-full px-3 py-2 rounded-md text-sm" placeholder="タグ（例：ファンタジー、連載、創作論）※読点や，で区切る" value="${esc(tagsInit)}">
+                <div class="rt-toolbar pb-2 border-b" style="border-color:var(--border-color)">
+                    <button class="rt-btn" data-rt="formatBlock" data-val="&lt;h2&gt;" title="大見出し">見出し<span class="text-[10px] ml-0.5">大</span></button>
+                    <button class="rt-btn" data-rt="formatBlock" data-val="&lt;h3&gt;" title="小見出し">見出し<span class="text-[10px] ml-0.5">小</span></button>
+                    <button class="rt-btn" data-rt="formatBlock" data-val="&lt;p&gt;" title="通常テキスト">通常テキスト</button>
+                    <span class="mx-1" style="color:var(--border-color)">|</span>
+                    <button class="rt-btn" data-rt="bold" title="太字"><i class="fas fa-bold"></i></button>
+                    <button class="rt-btn" data-rt="italic" title="斜体"><i class="fas fa-italic"></i></button>
+                    <button class="rt-btn" data-rt="underline" title="下線"><i class="fas fa-underline"></i></button>
+                    <span class="mx-1" style="color:var(--border-color)">|</span>
+                    <button class="rt-btn" data-rt="insertUnorderedList" title="箇条書き"><i class="fas fa-list-ul"></i></button>
+                    <button class="rt-btn" data-rt="insertOrderedList" title="数字付き箇条書き"><i class="fas fa-list-ol"></i></button>
+                </div>
+                <div id="blog-edit-body" contenteditable="true" class="rt-editor serif w-full" data-placeholder="ここに本文を書きましょう。">${bodyInit}</div>
+                <div class="flex justify-end gap-2"><button data-action="back" class="btn-ghost px-4 py-2 rounded-md text-sm">キャンセル</button>
+                <button data-action="blog-publish" data-id="${b?b.id:''}" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">${b?'更新する':'公開する'}</button></div>
+            </div>`;
+    }
+
+    // ================= 公開プロフィール =================
+    function renderProfile(userId){
+        const p=userById(userId); const u=me();
+        if(!p){ $('#view-profile').innerHTML=`${backBar()}<div class="card rounded-2xl p-6 text-center" style="color:var(--text-muted-color)">このユーザーは見つかりませんでした。</div>`; return; }
+        const isMe=p.id===u.id;
+        const iFollow=u.following.includes(p.id);
+        const iBlock=u.blocked.includes(p.id);
+        const links=(p.links||[]).filter(l=>l.url).map(l=>`<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer" class="exlink inline-flex items-center gap-1 text-sm underline break-all"><i class="fas fa-link text-xs"></i>${esc(l.label||l.url)}</a>`).join('<span class="mx-2" style="color:var(--border-color)">|</span>');
+        const genres=(p.genres||[]).map(g=>`<span class="chip on">${esc(g)}</span>`).join(' ');
+        const theirPosts = isMe||!iBlock ? posts.filter(x=>x.authorId===p.id&&canSee(x)).slice(0,20) : [];
+        let actions='';
+        if(!isMe){
+            actions = `<div class="flex gap-2 mt-4">
+                ${iBlock?`<button data-action="unblock" data-id="${p.id}" class="btn-ghost flex-1 py-2 rounded-md text-sm font-semibold">ブロック解除</button>`
+                : `${iFollow?`<button data-action="unfollow" data-id="${p.id}" class="btn-ghost flex-1 py-2 rounded-md text-sm font-semibold">フォロー中</button>`:`<button data-action="follow" data-id="${p.id}" class="btn-accent flex-1 py-2 rounded-md text-sm font-semibold">フォロー</button>`}
+                    <button data-action="block" data-id="${p.id}" class="btn-ghost px-3 py-2 rounded-md text-sm" title="ブロック"><i class="fas fa-ban"></i></button>
+                    <button data-action="report" data-rtype="user" data-id="${p.id}" class="btn-ghost px-3 py-2 rounded-md text-sm" title="通報"><i class="fas fa-flag"></i></button>`}
+            </div>`;
+        }
+        $('#view-profile').innerHTML = `${backBar()}
+            <div class="card rounded-2xl p-6">
+                <div class="flex items-center gap-4">${avatar(p,'w-16 h-16 text-2xl')}
+                    <div class="min-w-0"><div class="flex items-center gap-2 flex-wrap"><span class="text-xl font-bold truncate">${esc(p.penname)}</span>${roleBadge(p.role)}</div>
+                        <div class="text-sm mt-1" style="color:var(--text-muted-color)"><span class="font-semibold" style="color:var(--text-color)">${p.following.length}</span> フォロー　<span class="font-semibold" style="color:var(--text-color)">${p.followers.length}</span> フォロワー</div>
+                    </div></div>
+                ${iBlock&&!isMe?'<p class="text-xs mt-3 text-rose-400"><i class="fas fa-ban mr-1"></i>このユーザーをブロックしています</p>':''}
+                ${p.bio?`<p class="mt-4 whitespace-pre-wrap break-words text-sm">${esc(p.bio)}</p>`:''}
+                ${genres?`<div class="flex flex-wrap gap-2 mt-4">${genres}</div>`:''}
+                ${links?`<div class="mt-4 flex flex-wrap items-center">${links}</div>`:''}
+                ${actions}
+            </div>
+            <h3 class="font-bold px-1"><i class="fas fa-feather-pointed mr-2" style="color:var(--accent-color)"></i>${isMe?'あなた':esc(p.penname)+' さん'}の投稿</h3>
+            <div class="space-y-4">${theirPosts.length?theirPosts.map(postCard).join(''):`<div class="card rounded-2xl p-6 text-center text-sm" style="color:var(--text-muted-color)">投稿はまだありません。</div>`}</div>`;
+    }
+
+    // ================= 通知一覧 =================
+    function renderNotifications(){
+        const mine = notifs.filter(n=>n.toId===session).sort((a,b)=>b.createdAt-a.createdAt);
+        const TXT = { lamp:'さんが、あなたの言葉に灯をともしました', like:'さんがあなたの投稿に灯をともしました', comment:'さんがあなたの投稿にコメントしました', blogcomment:'さんがあなたの記事にコメントしました', follow:'さんがあなたをフォローしました' };
+        const ICON = { lamp:'fa-lightbulb', like:'fa-lightbulb', comment:'fa-comment', blogcomment:'fa-comment-dots', follow:'fa-user-plus' };
+        const body = mine.length ? mine.map(n=>{ const f=userById(n.fromId);
+            return `<div class="card rounded-xl p-3 flex items-center gap-3 ${n.read?'':'border-l-4'}" ${n.read?'':'style="border-left-color:var(--accent-color)"'}>
+                ${avatar(f,'w-9 h-9 text-sm',true)}
+                <div class="flex-1 min-w-0 text-sm"><i class="fas ${ICON[n.type]} mr-1" style="color:var(--accent-color)"></i>
+                    <span class="font-semibold cursor-pointer hover:underline" data-action="open-profile" data-id="${n.fromId}">${esc(f?f.penname:'退会者')}</span> ${TXT[n.type]||''}
+                    <div class="text-[11px] mt-0.5" style="color:var(--text-muted-color)">${timeAgo(n.createdAt)}</div></div>
+                ${(n.type==='blogcomment')?`<button data-action="open-blog" data-id="${n.refId}" class="btn-ghost px-2 py-1 rounded text-xs">見る</button>`:''}
+            </div>`; }).join('') : emptyState('fa-bell','通知はありません','いいねやコメント、フォローがあるとここに表示されます。');
+        $('#view-notifications').innerHTML = `${backBar()}<h2 class="font-bold px-1 text-lg">通知</h2><div class="space-y-2">${body}</div>`;
+        notifs.forEach(n=>{ if(n.toId===session) n.read=true; }); persist(); updateBell();
+    }
+
+    // ================= 設定 トップ =================
+    function settingsMenuItems(){
+        const items=[
+            {p:'account',  i:'fa-id-card',        t:'登録内容確認',     d:'メールアドレス・サブスク'},
+            {p:'profile',  i:'fa-user-pen',       t:'プロフィール設定', d:'ペンネーム・ジャンル・URL・フォロー'},
+            {p:'security', i:'fa-shield-halved',  t:'セキュリティ設定', d:'パスワード変更・退会'},
+            {p:'interaction', i:'fa-comments',    t:'交流設定',         d:'ブロック・ミュートワード'},
+            {p:'blog',     i:'fa-book',           t:'ブログ設定',       d:'自分の記事・コメント受付'},
+            {p:'data',     i:'fa-database',       t:'データ',           d:'バックアップ・復元'},
+            {p:'other',    i:'fa-circle-info',    t:'その他',           d:'規約・お問い合わせ・バージョン'},
+        ];
+        if(me() && me().role==='admin') items.splice(5,0,{p:'admin', i:'fa-crown', t:'管理人メニュー', d:'ユーザー管理・ユーザーからの声・通報'});
+        return items;
+    }
+    function renderSettings(){
+        $('#settings-menu').innerHTML = settingsMenuItems().map(m=>`
+            <div class="menu-row" data-action="subpage" data-page="${m.p}">
+                <i class="fas ${m.i} fa-fw text-lg" style="color:var(--accent-color)"></i>
+                <div class="flex-1 min-w-0"><p class="font-semibold">${m.t}</p><p class="text-xs" style="color:var(--text-muted-color)">${m.d}</p></div>
+                <i class="fas fa-chevron-right text-xs" style="color:var(--text-muted-color)"></i>
+            </div>`).join('');
+    }
+
+    // ----- 設定 各ページ -----
+    function openSubpage(page){ push('subpage', ()=>renderSubpage(page)); }
+    function renderSubpage(page){
+        const u=me();
+        const wrap = (title, inner) => `${backBar('設定')}<h2 class="font-bold px-1 text-lg mb-1">${title}</h2>${inner}`;
+        let html='';
+        if(page==='account'){
+            html = wrap('登録内容確認', `
+                <div class="card rounded-2xl p-5 space-y-2"><p class="text-xs" style="color:var(--text-muted-color)">登録メールアドレス</p><p class="font-semibold break-all">${esc(u.email)}</p></div>
+                <div class="card rounded-2xl p-5 space-y-3 mt-4"><h3 class="font-bold">メールアドレスの変更</h3>
+                    <input type="email" id="acc-email" class="input-field w-full px-3 py-2 rounded-md" value="${esc(u.email)}">
+                    <button data-action="save-email" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">変更を保存</button></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1"><i class="fas fa-crown mr-2 text-amber-400"></i>サブスクリプション</h3>
+                    <p class="text-sm" style="color:var(--text-muted-color)">現在は無料でご利用いただけます。将来的に、応援・特典つきの有料プランを検討中です。</p></div>`);
+        } else if(page==='profile'){
+            html = wrap('プロフィール設定', `
+                <div class="card rounded-2xl p-5 space-y-4">
+                    <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">ペンネーム</label><input type="text" id="pf-penname" maxlength="24" class="input-field w-full px-3 py-2 rounded-md" value="${esc(u.penname)}"></div>
+                    <div><label class="block text-xs mb-1" style="color:var(--text-muted-color)">自己紹介</label><textarea id="pf-bio" rows="3" maxlength="300" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="作風や、好きな作家など">${esc(u.bio)}</textarea></div>
+                    <div><label class="block text-xs mb-2" style="color:var(--text-muted-color)">好きなジャンル（複数選択可）</label><div id="pf-genres" class="flex flex-wrap gap-2">${GENRES.map(g=>`<span class="chip ${u.genres.includes(g)?'on':''}" data-genre="${esc(g)}">${esc(g)}</span>`).join('')}</div></div>
+                    <div><label class="block text-xs mb-2" style="color:var(--text-muted-color)">URL置き場</label><div id="pf-links" class="space-y-2"></div>
+                        <button data-action="add-link" class="btn-ghost px-3 py-1.5 rounded-md text-xs mt-2"><i class="fas fa-plus mr-1"></i>リンクを追加</button></div>
+                    <button data-action="save-profile" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">プロフィールを保存</button>
+                    <p id="pf-saved" class="text-xs text-emerald-400 hidden">保存しました。</p>
+                </div>
+                <div class="card rounded-2xl overflow-hidden mt-4">
+                    <div class="menu-row" data-action="open-profile" data-id="${u.id}"><i class="fas fa-eye fa-fw" style="color:var(--accent-color)"></i><div class="flex-1">自分の公開プロフィールを見る</div><i class="fas fa-chevron-right text-xs" style="color:var(--text-muted-color)"></i></div>
+                    <div class="menu-row" data-action="subpage" data-page="following"><i class="fas fa-user-group fa-fw" style="color:var(--accent-color)"></i><div class="flex-1">フォロー中 <span style="color:var(--text-muted-color)">(${u.following.length})</span></div><i class="fas fa-chevron-right text-xs" style="color:var(--text-muted-color)"></i></div>
+                    <div class="menu-row" data-action="subpage" data-page="followers"><i class="fas fa-users fa-fw" style="color:var(--accent-color)"></i><div class="flex-1">フォロワー <span style="color:var(--text-muted-color)">(${u.followers.length})</span></div><i class="fas fa-chevron-right text-xs" style="color:var(--text-muted-color)"></i></div>
+                </div>`);
+        } else if(page==='security'){
+            html = wrap('セキュリティ設定', `
+                <div class="card rounded-2xl p-5 space-y-3"><h3 class="font-bold">パスワードの変更</h3>
+                    <input type="password" id="sec-cur" class="input-field w-full px-3 py-2 rounded-md" placeholder="現在のパスワード">
+                    <input type="password" id="sec-new" class="input-field w-full px-3 py-2 rounded-md" placeholder="新しいパスワード（6文字以上）">
+                    <input type="password" id="sec-new2" class="input-field w-full px-3 py-2 rounded-md" placeholder="新しいパスワード（確認）">
+                    <p id="sec-msg" class="text-xs hidden"></p>
+                    <button data-action="save-password" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold">変更する</button></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold text-rose-400 mb-1"><i class="fas fa-triangle-exclamation mr-1"></i>アカウントの削除（退会）</h3>
+                    <p class="text-sm mb-3" style="color:var(--text-muted-color)">退会するとアカウントは削除され、元に戻せません。投稿・記事は「退会者」名義で残る場合があります。</p>
+                    <button data-action="delete-account" class="btn-danger px-4 py-2 rounded-md text-sm font-semibold">退会する</button></div>`);
+        } else if(page==='interaction'){
+            const blocked=u.blocked.map(id=>userById(id)).filter(Boolean);
+            html = wrap('交流設定', `
+                <div class="card rounded-2xl p-5"><h3 class="font-bold mb-3"><i class="fas fa-ban mr-2"></i>ブロックしたユーザー</h3>
+                    <div class="space-y-2">${blocked.length?blocked.map(b=>`<div class="flex items-center gap-2 rounded-lg px-3 py-2" style="background:var(--bg-color)">${avatar(b,'w-7 h-7 text-xs',true)}<span class="text-sm font-semibold flex-1 truncate">${esc(b.penname)}</span><button data-action="unblock" data-id="${b.id}" class="btn-ghost text-xs px-2 py-1 rounded">解除</button></div>`).join(''):`<p class="text-sm" style="color:var(--text-muted-color)">ブロックしているユーザーはいません。</p>`}</div></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1"><i class="fas fa-comment-slash mr-2"></i>ミュートワード</h3>
+                    <p class="text-xs mb-3" style="color:var(--text-muted-color)">指定した語を含む投稿・コメントは、交流画面に表示されなくなります（相手に通知は届きません）。</p>
+                    <div class="flex gap-2"><input type="text" id="mute-input" class="input-field flex-1 px-3 py-2 rounded-md text-sm" placeholder="例：ネタバレ" maxlength="40"><button data-action="add-mute" class="btn-accent px-4 rounded-md text-sm font-semibold">追加</button></div>
+                    <div id="mute-list" class="flex flex-wrap gap-2 mt-3">${u.muteWords.map(w=>`<span class="chip on">${esc(w)} <i class="fas fa-xmark ml-1 cursor-pointer" data-action="del-mute" data-word="${esc(w)}"></i></span>`).join('')||`<span class="text-sm" style="color:var(--text-muted-color)">登録されていません。</span>`}</div></div>`);
+        } else if(page==='blog'){
+            const mine=blogs.filter(b=>b.authorId===u.id);
+            html = wrap('ブログ設定', `
+                <div class="card rounded-2xl p-5 flex items-center gap-3"><div class="flex-1"><h3 class="font-bold">記事へのコメントを受け付ける</h3><p class="text-xs" style="color:var(--text-muted-color)">オフにすると、自分の記事にコメントできなくなります。</p></div>
+                    <button data-action="toggle-blog-comments" class="px-1" title="切替"><i class="fas ${u.blogComments?'fa-toggle-on':'fa-toggle-off'} text-3xl" style="color:${u.blogComments?'var(--accent-color)':'var(--text-muted-color)'}"></i></button></div>
+                ${canWriteBlog(u)?`<div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3">自分の記事</h3>
+                    <div class="space-y-2">${mine.length?mine.map(b=>`<div class="flex items-center gap-2 rounded-lg px-3 py-2" style="background:var(--bg-color)"><span class="text-sm flex-1 truncate cursor-pointer" data-action="open-blog" data-id="${b.id}">${esc(b.title)}</span><button data-action="edit-blog" data-id="${b.id}" class="btn-ghost text-xs px-2 py-1 rounded">編集</button><button data-action="del-blog" data-id="${b.id}" class="btn-ghost text-xs px-2 py-1 rounded">削除</button></div>`).join(''):`<p class="text-sm" style="color:var(--text-muted-color)">まだ記事がありません。</p>`}</div></div>`
+                    :`<div class="card rounded-2xl p-5 mt-4 text-sm" style="color:var(--text-muted-color)">ブログ記事は管理人・ブロガーが投稿できます。執筆をご希望の場合は管理人にご連絡ください。</div>`}`);
+        } else if(page==='data'){
+            html = wrap('データ', `<div class="card rounded-2xl p-5"><p class="text-sm mb-3" style="color:var(--text-muted-color)">この端末のデータをバックアップ・復元できます。試作版では端末内にのみ保存されるため、定期的なエクスポートをおすすめします。</p>
+                <div class="flex flex-wrap gap-2"><button data-action="export" class="btn-ghost px-4 py-2 rounded-md text-sm"><i class="fas fa-download mr-1"></i>エクスポート</button>
+                <label class="btn-ghost px-4 py-2 rounded-md text-sm cursor-pointer"><i class="fas fa-upload mr-1"></i>インポート<input type="file" id="import-input" accept="application/json" class="hidden"></label></div></div>`);
+        } else if(page==='other'){
+            html = wrap('その他', `
+                <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1">利用規約</h3><p class="text-sm" style="color:var(--text-muted-color)">本サービスは小説家どうしの交流を目的としています。誹謗中傷・無断転載・公序良俗に反する投稿は禁止です。（試作版のサンプル文面）</p></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">プライバシーポリシー</h3><p class="text-sm" style="color:var(--text-muted-color)">試作版では、入力された情報はこの端末のブラウザ内にのみ保存され、外部送信されません。（サンプル文面）</p></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1"><i class="fas fa-paper-plane mr-2" style="color:var(--accent-color)"></i>お問い合わせ・ご意見</h3>
+                    <p class="text-xs mb-3" style="color:var(--text-muted-color)">試作版でも、皆さまの声をお待ちしています。いただいた内容は管理人だけが確認します。</p>
+                    <textarea id="fb-input" rows="4" maxlength="2000" class="textarea-field w-full px-3 py-2 rounded-md resize-none" placeholder="ご感想・ご要望・不具合など、お気軽にどうぞ"></textarea>
+                    <div class="flex items-center justify-between mt-2"><p id="fb-msg" class="text-xs text-emerald-400 hidden">送信しました。ありがとうございます。</p>
+                    <button data-action="send-feedback" class="btn-accent px-4 py-2 rounded-md text-sm font-semibold ml-auto">送信する</button></div></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-1">バージョン情報</h3><p class="text-sm" style="color:var(--text-muted-color)">筆置（ふでおき） 試作版 v0.5</p></div>`);
+        } else if(page==='admin'){
+            html = wrap('管理人メニュー', `
+                <div class="card rounded-2xl p-5"><h3 class="font-bold mb-1"><i class="fas fa-users-gear mr-2" style="color:var(--accent-color)"></i>ユーザー管理</h3>
+                    <p class="text-xs mb-3" style="color:var(--text-muted-color)">「ブロガー認定」でブログ執筆を許可、「BAN」でアカウントを強制退会させます（同じメールアドレスでの再登録もできなくなります）。</p>
+                    <div id="member-list" class="space-y-2"></div></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3"><i class="fas fa-comment-dots mr-2" style="color:var(--accent-color)"></i>ユーザーからの声（${feedbacks.length}）</h3><div class="space-y-2">${renderFeedbacks()}</div></div>
+                <div class="card rounded-2xl p-5 mt-4"><h3 class="font-bold mb-3"><i class="fas fa-flag mr-2 text-rose-400"></i>通報一覧（${reports.length}）</h3><div class="space-y-2">${renderReports()}</div></div>`);
+        } else if(page==='following' || page==='followers'){
+            const isF=page==='following';
+            const ids=isF?u.following:u.followers;
+            const listUsers=ids.map(id=>userById(id)).filter(Boolean);
+            html = `${backBar('戻る')}<h2 class="font-bold px-1 text-lg mb-1">${isF?'フォロー中':'フォロワー'}（${listUsers.length}）</h2>
+                <div class="card rounded-2xl p-4 space-y-2">${listUsers.length?listUsers.map(o=>{
+                    const iFollow=u.following.includes(o.id);
+                    let act = isF ? `<button data-action="unfollow" data-id="${o.id}" class="btn-ghost text-xs px-3 py-1.5 rounded">解除</button>`
+                        : `${iFollow?`<button data-action="unfollow" data-id="${o.id}" class="btn-ghost text-xs px-3 py-1.5 rounded">フォロー中</button>`:`<button data-action="follow" data-id="${o.id}" class="btn-accent text-xs px-3 py-1.5 rounded">フォローし返す</button>`}<button data-action="block" data-id="${o.id}" class="btn-ghost text-xs px-2 py-1.5 rounded" title="ブロック"><i class="fas fa-ban"></i></button>`;
+                    return `<div class="flex items-center gap-2">${avatar(o,'w-9 h-9 text-sm',true)}<div class="flex-1 min-w-0 cursor-pointer" data-action="open-profile" data-id="${o.id}"><p class="text-sm font-semibold truncate">${esc(o.penname)}</p><p class="text-xs truncate" style="color:var(--text-muted-color)">${esc((o.bio||'').slice(0,30))}</p></div>${act}</div>`;
+                }).join(''):`<p class="text-sm text-center py-4" style="color:var(--text-muted-color)">${isF?'まだ誰もフォローしていません。':'まだフォロワーはいません。'}</p>`}</div>`;
+        }
+        $('#view-subpage').innerHTML = html;
+        if(page==='profile'){ editLinks=[]; renderLinkRows(); }
+        if(page==='admin') renderMemberList();
+    }
+
+    function renderReports(){
+        if(!reports.length) return `<p class="text-sm" style="color:var(--text-muted-color)">通報はありません。</p>`;
+        const LBL={post:'投稿',comment:'コメント',blog:'記事',user:'ユーザー'};
+        return reports.slice().reverse().map(r=>{ const by=userById(r.byId);
+            return `<div class="rounded-lg px-3 py-2 text-sm" style="background:var(--bg-color)"><div class="flex items-center gap-2"><span class="badge" style="background:var(--danger-color);color:#fff">${LBL[r.type]||r.type}</span><span class="text-xs" style="color:var(--text-muted-color)">${timeAgo(r.createdAt)}・通報者：${esc(by?by.penname:'不明')}</span></div>${r.reason?`<p class="mt-1">${esc(r.reason)}</p>`:''}</div>`;
+        }).join('');
+    }
+    function renderFeedbacks(){
+        if(!feedbacks.length) return `<p class="text-sm" style="color:var(--text-muted-color)">まだ届いていません。</p>`;
+        const fmtLog = ts => { const d=new Date(ts); return `${d.getMonth()+1}月${d.getDate()}日 ${('0'+d.getHours()).slice(-2)}:${('0'+d.getMinutes()).slice(-2)}`; };
+        return feedbacks.slice().reverse().map(f=>{ const by=userById(f.byId);
+            return `<div class="rounded-lg px-3 py-2 text-sm" style="background:var(--bg-color)">
+                <div class="text-xs" style="color:var(--text-muted-color)"><i class="far fa-clock mr-1"></i>${fmtLog(f.createdAt)}　<i class="fas fa-user mr-1"></i>${esc(by?by.penname:f.byName||'退会者')}<span class="ml-1">（${esc(f.byEmail||'')}）</span></div>
+                <p class="mt-1 whitespace-pre-wrap break-words">${esc(f.body)}</p></div>`;
+        }).join('');
+    }
+    function renderMemberList(){ const u=me(); const el=$('#member-list'); if(!el)return;
+        el.innerHTML = users.map(m=>`<div class="flex items-center gap-2 rounded-lg px-3 py-2 flex-wrap" style="background:var(--bg-color)">${avatar(m,'w-7 h-7 text-xs',true)}
+            <div class="flex-1 min-w-0"><div class="flex items-center gap-2"><span class="text-sm font-semibold truncate">${esc(m.penname)}</span>${roleBadge(m.role)}</div><span class="text-[11px] truncate block" style="color:var(--text-muted-color)">${esc(m.email)}</span></div>
+            ${m.id!==u.id&&m.role!=='admin'?`<div class="flex gap-1">${m.role==='author'?`<button data-action="set-role" data-id="${m.id}" data-role="member" class="btn-ghost text-xs px-2 py-1 rounded">認定を外す</button>`:`<button data-action="set-role" data-id="${m.id}" data-role="author" class="btn-accent text-xs px-2 py-1 rounded">ブロガー認定</button>`}<button data-action="ban" data-id="${m.id}" class="btn-danger text-xs px-2 py-1 rounded">BAN</button></div>`:''}</div>`).join('');
+    }
+
+    // プロフィール編集：リンク行
+    let editLinks=[];
+    function syncLinksFromDom(){ const rows=$$('#pf-links .link-row'); editLinks=rows.map(r=>({label:$('.link-label',r).value.trim(), url:$('.link-url',r).value.trim()})); }
+    function renderLinkRows(){ if(editLinks.length===0){ editLinks = (me().links||[]).map(l=>({...l})); } const c=$('#pf-links'); if(!c)return;
+        c.innerHTML = editLinks.map((l,i)=>`<div class="link-row flex gap-2 items-center">
+            <input list="link-presets" class="link-label input-field px-2 py-1.5 rounded-md text-sm" style="width:8rem" placeholder="サイト名" value="${esc(l.label||'')}">
+            <input class="link-url input-field flex-1 px-2 py-1.5 rounded-md text-sm" placeholder="https://…" value="${esc(l.url||'')}">
+            <button data-action="del-link" data-i="${i}" class="text-rose-400 px-1"><i class="fas fa-xmark"></i></button></div>`).join('')
+            + `<datalist id="link-presets">${LINK_PRESETS.map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`;
+    }
+
+    // ================= 共通 =================
+    function emptyState(icon,title,sub){ return `<div class="card rounded-2xl p-10 text-center"><i class="fas ${icon} text-3xl mb-3" style="color:var(--text-muted-color)"></i><p class="font-semibold">${title}</p><p class="text-sm mt-1" style="color:var(--text-muted-color)">${sub}</p></div>`; }
+
+    // ================= クリック処理（イベント委譲） =================
+    document.addEventListener('click', e=>{
+        // 投稿先メニューの外側クリックで閉じる
+        const vm=document.getElementById('vis-menu');
+        if(vm && !vm.classList.contains('hidden') && !e.target.closest('#vis-menu') && !e.target.closest('[data-action="toggle-visibility"]')) vm.classList.add('hidden');
+        const t = e.target.closest('[data-action]'); if(!t) return;
+        const a = t.dataset.action, id = t.dataset.id, u = me();
+        switch(a){
+            case 'bell': push('notifications', renderNotifications); break;
+            case 'back': back(); break;
+            case 'nav': { const target=t.dataset.view, cur=hist[0]?hist[0].view:'home';
+                if(target===cur){ navTo(target); }
+                else if(target==='home'){ animateBook('close', cur, ()=>navTo('home')); }
+                else { animateBook('open', target, ()=>navTo(target)); }
+            } break;
+            case 'logout': if(confirm('ログアウトしますか？')){ session=null; persist(); showAuth(); } break;
+            case 'feedtab': feedTab=t.dataset.tab; renderKoryu(); break;
+            case 'subpage': openSubpage(t.dataset.page); break;
+            case 'open-profile': push('profile', ()=>renderProfile(id)); break;
+
+            case 'toggle-search': { searchOpen=!searchOpen; const sb=$('#search-box'); if(sb)sb.classList.toggle('hidden',!searchOpen); if(searchOpen){ const si=$('#search-input'); if(si)si.focus(); } } break;
+            case 'clear-search': { searchQuery=''; const si=$('#search-input'); if(si)si.value=''; renderFeed(); } break;
+            case 'show-bookmarks': push('bookmarks', renderBookmarks); break;
+            case 'jump-post': { feedTab='all'; searchQuery=''; searchOpen=false; navTo('koryu'); const pid=id; setTimeout(()=>{ const el=document.getElementById('post-'+pid); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('post-highlight'); setTimeout(()=>el.classList.remove('post-highlight'),2200); } },80); } break;
+
+            case 'compose-open': { const md=$('#compose-modal'); if(md){ md.classList.remove('hidden'); composeVis=null; updateComposeUI(); const ta=$('#post-input'); if(ta){ const c=$('#post-count'); if(c)c.textContent=`${ta.value.length} / ${POST_MAX}`; setTimeout(()=>ta.focus(),30); } } } break;
+            case 'compose-close': { const md=$('#compose-modal'); if(md)md.classList.add('hidden'); const vm=$('#vis-menu'); if(vm)vm.classList.add('hidden'); } break;
+            case 'toggle-visibility': { const m=$('#vis-menu'); if(m)m.classList.toggle('hidden'); } break;
+            case 'set-visibility': { composeVis=t.dataset.vis; updateComposeUI(); const m=$('#vis-menu'); if(m)m.classList.add('hidden'); } break;
+            case 'post': {
+                const ta=$('#post-input'); const body=ta.value.trim(); if(!body)break;
+                if(!composeVis){ toast('投稿先の設定をしてください'); const m=$('#vis-menu'); if(m)m.classList.remove('hidden'); break; }
+                posts.unshift({id:uid(),authorId:session,body,visibility:composeVis,createdAt:Date.now(),lamps:[],comments:[],bookmarks:[]});
+                ta.value=''; const c=$('#post-count'); if(c)c.textContent=`0 / ${POST_MAX}`;
+                composeVis=null; updateComposeUI(); persist(); renderFeed();
+                const md=$('#compose-modal'); if(md)md.classList.add('hidden');
+                toast('投稿しました');
+            } break;
+            case 'del-post': if(confirm('この投稿を削除しますか？')){ posts=posts.filter(x=>x.id!==id); persist(); const cur=hist[hist.length-1]; if(cur&&cur.render)cur.render(); } break;
+
+            // 個室（作業部屋）
+            case 'memo-new': renderMemoEdit(null); push('memo-edit', null); break;
+            case 'open-memo': { renderMemoEdit(id); push('memo-edit', null); } break;
+            case 'memo-tag-toggle': { t.classList.toggle('on'); } break;
+            case 'memo-pin-toggle': { memoEditPinned=!memoEditPinned; const ic=t.querySelector('i'); if(ic){ ic.className=`fa-${memoEditPinned?'solid':'regular'} fa-thumbtack`; ic.style.transform='rotate(45deg)'; ic.style.display='inline-block'; } if(memoEditPinned){ t.style.color='#fff'; t.style.background='var(--accent-color)'; t.style.borderColor='var(--accent-color)'; } else { t.style.color=''; t.style.background=''; t.style.borderColor=''; } } break;
+            case 'memo-save': {
+                const title=$('#memo-title').value.trim(), body=$('#memo-body').value;
+                if(!title && !body.trim()){ toast('内容を入力してください'); break; }
+                const tags=$$('#memo-tags .chip.on').map(c=>c.dataset.tag);
+                if(id){ const m=memos.find(x=>x.id===id&&x.ownerId===session); if(m){ m.title=title; m.body=body; m.tags=tags; m.pinned=memoEditPinned; m.updatedAt=Date.now(); } }
+                else { memos.push({id:uid(),ownerId:session,title,body,tags,pinned:memoEditPinned,createdAt:Date.now(),updatedAt:Date.now()}); }
+                persist(); back(); renderRoom(); toast('保存しました');
+            } break;
+            case 'memo-del': if(confirm('この原稿を削除しますか？元に戻せません。')){ memos=memos.filter(x=>x.id!==id); persist(); back(); renderRoom(); toast('削除しました'); } break;
+            case 'memo-pin': { const m=memos.find(x=>x.id===id&&x.ownerId===session); if(!m)break; m.pinned=!m.pinned; persist(); renderRoom(); } break;
+            case 'memo-copy': { const m=memos.find(x=>x.id===id&&x.ownerId===session); if(!m)break; copyText((m.title?m.title+'\n\n':'')+(m.body||'')); } break;
+            case 'lamp': {
+                const p=posts.find(x=>x.id===id); if(!p)break; p.lamps=p.lamps||[];
+                const i=p.lamps.indexOf(session), lit=i<0;
+                if(lit){ p.lamps.push(session); addNotif(p.authorId,'lamp',session,p.id); }
+                else { p.lamps.splice(i,1); removeNotif(p.authorId,'lamp',session,p.id); }
+                persist(); updateBell();
+                t.style.color=lit?'var(--accent-color)':''; const ic=t.querySelector('i'); if(ic)ic.className=`fa-${lit?'solid':'regular'} fa-lightbulb`;
+            } break;
+            case 'bookmark': {
+                const p=posts.find(x=>x.id===id); if(!p)break; p.bookmarks=p.bookmarks||[];
+                const i=p.bookmarks.indexOf(session), on=i<0;
+                if(on)p.bookmarks.push(session); else p.bookmarks.splice(i,1);
+                persist();
+                t.style.color=on?'var(--accent-color)':''; const ic=t.querySelector('i'); if(ic)ic.className=`fa-${on?'solid':'regular'} fa-bookmark`;
+                toast(on?'ブックマークしました':'ブックマークを外しました');
+            } break;
+            case 'expand': { const wrap=t.closest('.post-body'); if(wrap){ const r=$('.fold-rest',wrap); if(r)r.classList.remove('hidden'); const el=$('.fold-ellipsis',wrap); if(el)el.remove(); } t.remove(); } break;
+            case 'toggle-comment': { const c=$(`.comments[data-id="${id}"]`); if(c)c.classList.toggle('hidden'); } break;
+            case 'comment-send': { const box=t.closest('.comments'); const input=$('.comment-input',box); const body=input.value.trim(); if(!body)break; const p=posts.find(x=>x.id===id); (p.comments=p.comments||[]).push({id:uid(),authorId:session,body,createdAt:Date.now()}); addNotif(p.authorId,'comment',session,p.id); persist(); const cur=hist[hist.length-1]; if(cur&&cur.render)cur.render(); updateBell(); const reopened=$(`.comments[data-id="${id}"]`); if(reopened)reopened.classList.remove('hidden'); } break;
+
+            case 'blog-new': renderBlogEdit(null); push('blog-edit', null); break;
+            case 'edit-blog': renderBlogEdit(id); push('blog-edit', null); break;
+            case 'open-blog': push('blog-detail', ()=>renderBlogDetail(id)); break;
+            case 'blog-publish': {
+                const title=$('#blog-edit-title').value.trim();
+                const bodyHtml=sanitizeBlog($('#blog-edit-body').innerHTML);
+                const tags=[...new Set($('#blog-edit-tags').value.split(/[,、，\n]/).map(s=>s.trim()).filter(Boolean))].slice(0,8);
+                if(!title || !stripHtml(bodyHtml)){ toast('タイトルと本文を入力してください'); break; }
+                if(!canWriteBlog(u)){ toast('権限がありません'); break; }
+                if(id){ const b=blogs.find(x=>x.id===id); b.title=title; b.body=bodyHtml; b.tags=tags; b.format='html'; b.updatedAt=Date.now(); toast('記事を更新しました'); }
+                else { blogs.unshift({id:uid(),authorId:session,title,body:bodyHtml,tags,format:'html',createdAt:Date.now(),updatedAt:Date.now(),comments:[],bookmarks:[]}); toast('記事を公開しました'); }
+                persist(); back(); renderBlog();
+            } break;
+            case 'blog-bookmark': { const b=blogs.find(x=>x.id===id); if(!b)break; b.bookmarks=b.bookmarks||[]; const i=b.bookmarks.indexOf(session), on=i<0; if(on)b.bookmarks.push(session); else b.bookmarks.splice(i,1); persist(); renderBlogDetail(id); toast(on?'ブックマークしました':'ブックマークを外しました'); } break;
+            case 'blog-page': { blogPage += (+t.dataset.dir); renderBlog(); window.scrollTo({top:0,behavior:'smooth'}); } break;
+            case 'blog-comment-send': { const b=blogs.find(x=>x.id===id); const input=$('#blog-comment-input'); const body=input.value.trim(); if(!body)break; (b.comments=b.comments||[]).push({id:uid(),authorId:session,body,createdAt:Date.now()}); addNotif(b.authorId,'blogcomment',session,b.id); persist(); renderBlogDetail(id); updateBell(); } break;
+            case 'del-blog': if(confirm('この記事を削除しますか？')){ blogs=blogs.filter(x=>x.id!==id); persist(); if(hist[hist.length-1].view==='blog-detail') back(); else renderSubpage('blog'); renderBlog(); } break;
+
+            // フォロー・ブロック
+            case 'follow': { if(u.id===id)break; if(blockedEither(u.id,id)){ toast('ブロック中のため操作できません'); break; } if(!u.following.includes(id)){ u.following.push(id); const o=userById(id); if(!o.followers.includes(u.id))o.followers.push(u.id); addNotif(id,'follow',u.id,u.id); } persist(); refreshAfterRelation(); updateBell(); } break;
+            case 'unfollow': { u.following=u.following.filter(x=>x!==id); const o=userById(id); if(o)o.followers=o.followers.filter(x=>x!==u.id); removeNotif(id,'follow',u.id,u.id); persist(); refreshAfterRelation(); } break;
+            case 'block': { if(u.id===id)break; if(!confirm('このユーザーをブロックしますか？\n相手の投稿が表示されなくなり、フォロー関係も解除されます。'))break; if(!u.blocked.includes(id))u.blocked.push(id); u.following=u.following.filter(x=>x!==id); u.followers=u.followers.filter(x=>x!==id); const o=userById(id); if(o){ o.following=o.following.filter(x=>x!==u.id); o.followers=o.followers.filter(x=>x!==u.id); } persist(); refreshAfterRelation(); toast('ブロックしました'); } break;
+            case 'unblock': { u.blocked=u.blocked.filter(x=>x!==id); persist(); refreshAfterRelation(); toast('ブロックを解除しました'); } break;
+
+            // 通報
+            case 'report': { const reason=prompt('通報の理由をご記入ください（任意）。送信すると運営に報告されます。'); if(reason===null)break; reports.push({id:uid(),byId:session,type:t.dataset.rtype,refId:id,reason:reason.trim(),createdAt:Date.now()}); persist(); toast('報告しました。ご協力ありがとうございます。'); } break;
+
+            // プロフィール保存系
+            case 'save-email': { const v=$('#acc-email').value.trim().toLowerCase(); if(!validEmail(v)){ toast('正しいメールアドレスを入力してください'); break; } if(users.some(x=>x.email===v&&x.id!==u.id)){ toast('このメールは既に使われています'); break; } u.email=v; persist(); toast('メールアドレスを変更しました'); } break;
+            case 'add-link': syncLinksFromDom(); editLinks.push({label:'',url:''}); renderLinkRows(); break;
+            case 'del-link': syncLinksFromDom(); editLinks.splice(+t.dataset.i,1); renderLinkRows(); break;
+            case 'save-profile': {
+                const pn=$('#pf-penname').value.trim(); if(!pn){ toast('ペンネームを入力してください'); break; }
+                u.penname=pn; u.bio=$('#pf-bio').value.trim();
+                u.genres=$$('#pf-genres .chip.on').map(c=>c.dataset.genre);
+                syncLinksFromDom(); u.links=editLinks.filter(l=>l.url&&validUrl(l.url));
+                editLinks=[]; persist(); renderHeader();
+                const m=$('#pf-saved'); if(m){ m.classList.remove('hidden'); setTimeout(()=>m.classList.add('hidden'),1800); }
+                toast('プロフィールを保存しました');
+            } break;
+            case 'save-password': {
+                const cur=$('#sec-cur').value, nw=$('#sec-new').value, nw2=$('#sec-new2').value, msg=$('#sec-msg'); msg.classList.remove('hidden');
+                if(u.pw!==hash(cur)){ msg.className='text-xs text-rose-400'; msg.textContent='現在のパスワードが違います。'; break; }
+                if(nw.length<6){ msg.className='text-xs text-rose-400'; msg.textContent='新しいパスワードは6文字以上にしてください。'; break; }
+                if(nw!==nw2){ msg.className='text-xs text-rose-400'; msg.textContent='確認用パスワードが一致しません。'; break; }
+                u.pw=hash(nw); persist(); msg.className='text-xs text-emerald-400'; msg.textContent='パスワードを変更しました。'; $('#sec-cur').value=$('#sec-new').value=$('#sec-new2').value='';
+            } break;
+            case 'delete-account': {
+                if(!confirm('本当に退会しますか？この操作は元に戻せません。'))break;
+                if(!confirm('最終確認：アカウントを削除します。よろしいですか？'))break;
+                const myId=u.id; users=users.filter(x=>x.id!==myId);
+                users.forEach(o=>{ o.following=o.following.filter(x=>x!==myId); o.followers=o.followers.filter(x=>x!==myId); o.blocked=o.blocked.filter(x=>x!==myId); });
+                notifs=notifs.filter(n=>n.toId!==myId&&n.fromId!==myId);
+                memos=memos.filter(m=>m.ownerId!==myId);
+                session=null; persist(); showAuth(); toast('退会しました');
+            } break;
+
+            // 交流設定
+            case 'add-mute': { const v=$('#mute-input').value.trim(); if(!v)break; if(!u.muteWords.includes(v))u.muteWords.push(v); persist(); renderSubpage('interaction'); } break;
+            case 'del-mute': { u.muteWords=u.muteWords.filter(w=>w!==t.dataset.word); persist(); renderSubpage('interaction'); } break;
+
+            // ブログ設定
+            case 'toggle-blog-comments': { u.blogComments=!u.blogComments; persist(); renderSubpage('blog'); } break;
+
+            // お問い合わせ送信（管理人だけが「ユーザーからの声」で閲覧）
+            case 'send-feedback': { const ta=$('#fb-input'); const body=ta.value.trim(); if(!body){ toast('内容を入力してください'); break; } feedbacks.push({id:uid(),byId:u.id,byName:u.penname,byEmail:u.email,body,createdAt:Date.now()}); persist(); ta.value=''; const m=$('#fb-msg'); if(m){ m.classList.remove('hidden'); setTimeout(()=>m.classList.add('hidden'),2600); } toast('送信しました。ありがとうございます。'); } break;
+
+            // 管理人：ユーザー管理
+            case 'set-role': { const m=userById(id); m.role=t.dataset.role; persist(); renderMemberList(); renderBlog(); toast(t.dataset.role==='author'?'ブロガーに認定しました':'ブロガー認定を外しました'); } break;
+            case 'ban': {
+                const m=userById(id); if(!m||m.role==='admin')break;
+                if(!confirm(`${m.penname} さんをBANしますか？\nアカウントは強制的に退会処理され、同じメールアドレスでは再登録・ログインできなくなります。`))break;
+                if(!banned.includes(m.email)) banned.push(m.email);
+                const mid=m.id; users=users.filter(x=>x.id!==mid);
+                users.forEach(o=>{ o.following=o.following.filter(x=>x!==mid); o.followers=o.followers.filter(x=>x!==mid); o.blocked=o.blocked.filter(x=>x!==mid); });
+                notifs=notifs.filter(n=>n.toId!==mid&&n.fromId!==mid);
+                memos=memos.filter(x=>x.ownerId!==mid);
+                persist(); renderMemberList(); renderBlog(); renderFeed(); renderHome(); toast(`${m.penname} さんをBANしました`);
+            } break;
+
+            // データ
+            case 'export': { const data={users,posts,blogs,notifs,reports,feedbacks,banned,memos,exportedAt:new Date().toISOString()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=`fudebi-backup-${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(link.href); } break;
+        }
+    });
+
+    // フォロー/ブロック後の再描画
+    function refreshAfterRelation(){ const cur=hist[hist.length-1]; if(cur.render) cur.render(); renderHeader(); }
+
+    // Enterでコメント送信
+    document.addEventListener('keydown', e=>{
+        if(e.key!=='Enter') return;
+        if(e.target.classList.contains('comment-input')){ e.preventDefault(); const box=e.target.closest('.comments'); const btn=$('[data-action="comment-send"]',box); if(btn)btn.click(); }
+        else if(e.target.id==='blog-comment-input'){ e.preventDefault(); const btn=$('[data-action="blog-comment-send"]'); if(btn)btn.click(); }
+        else if(e.target.id==='mute-input'){ e.preventDefault(); const btn=$('[data-action="add-mute"]'); if(btn)btn.click(); }
+    });
+
+    // 入力（文字数カウンター・ライブ検索）
+    document.addEventListener('input', e=>{
+        if(e.target.id==='post-input'){ const c=$('#post-count'); if(c)c.textContent=`${e.target.value.length} / ${POST_MAX}`; }
+        else if(e.target.id==='search-input'){ searchQuery=e.target.value; renderFeed(); }
+        else if(e.target.id==='blog-search'){ blogSearch=e.target.value; blogPage=0; renderBlog(); }
+        else if(e.target.id==='memo-body'){ const c=$('#memo-count'); if(c)c.textContent=`${e.target.value.length} / ${MEMO_MAX}`; }
+    });
+
+    // ブログのソート・絞り込み（select）
+    document.addEventListener('change', e=>{
+        if(e.target.id==='blog-sort'){ blogSort=e.target.value; blogPage=0; renderBlog(); }
+        else if(e.target.id==='blog-tag'){ blogTag=e.target.value; blogPage=0; renderBlog(); }
+        else if(e.target.id==='blog-author'){ blogAuthor=e.target.value; blogPage=0; renderBlog(); }
+    });
+
+    // 記事作成：書式ツールバー（選択範囲を保つため mousedown で実行）
+    document.addEventListener('mousedown', e=>{
+        const btn=e.target.closest('[data-rt]'); if(!btn) return;
+        e.preventDefault();
+        document.execCommand(btn.dataset.rt, false, btn.dataset.val || null);
+        updateToolbarState();
+    });
+    // ツールバーの ON/OFF 表示（現在のカーソル位置の書式を反映）
+    function updateToolbarState(){
+        const ed=document.getElementById('blog-edit-body'); if(!ed) return;
+        const sel=window.getSelection();
+        const inside = sel && sel.anchorNode && ed.contains(sel.anchorNode);
+        const block=(()=>{ try{ return (document.queryCommandValue('formatBlock')||'').toLowerCase(); }catch{ return ''; } })();
+        $$('[data-rt]').forEach(btn=>{
+            let on=false;
+            if(inside){
+                const cmd=btn.dataset.rt;
+                if(cmd==='formatBlock'){ const v=(btn.dataset.val||'').replace(/[<>]/g,'').toLowerCase(); on = (v==='p') ? (block===''||block==='p'||block==='div') : (block===v); }
+                else { try{ on=document.queryCommandState(cmd); }catch{ on=false; } }
+            }
+            btn.classList.toggle('active', on);
+        });
+    }
+    document.addEventListener('selectionchange', updateToolbarState);
+
+    // インポート（動的生成のため委譲）
+    document.addEventListener('change', e=>{
+        if(e.target.id!=='import-input') return;
+        const file=e.target.files[0]; if(!file)return;
+        const reader=new FileReader();
+        reader.onload=()=>{ try{ const d=JSON.parse(reader.result); if(!Array.isArray(d.users))throw new Error('形式が不正です'); if(!confirm('現在のデータを上書きしてインポートします。よろしいですか？'))return;
+            users=d.users; posts=d.posts||[]; blogs=d.blogs||[]; notifs=d.notifs||[]; reports=d.reports||[]; feedbacks=d.feedbacks||[]; banned=d.banned||[]; memos=d.memos||[];
+            users.forEach(x=>{ x.following=x.following||[]; x.followers=x.followers||[]; x.blocked=x.blocked||[]; x.genres=x.genres||[]; x.links=x.links||[]; x.muteWords=x.muteWords||[]; if(x.blogComments===undefined)x.blogComments=true; });
+            posts.forEach(x=>{ x.lamps=x.lamps||x.likes||[]; x.bookmarks=x.bookmarks||[]; x.comments=x.comments||[]; if(!x.visibility)x.visibility='public'; });
+            if(!users.some(x=>x.id===session))session=null; persist();
+            if(session){ renderHeader(); updateBell(); navTo('home'); } else showAuth(); toast('インポートしました');
+        }catch(err){ alert('読み込みに失敗しました：'+err.message); } };
+        reader.readAsText(file); e.target.value='';
+    });
+
+    // ================= 起動 =================
+    if(session && me()) showApp(); else showAuth();
+})();
+</script>
+</body>
+</html>
